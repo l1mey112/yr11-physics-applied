@@ -65,6 +65,8 @@ static ImVec2 rotate(ImVec2 v, float theta)
 	return (ImVec2){v.x * cosf(theta) - v.y * sinf(theta), v.x * sinf(theta) + v.y * cosf(theta)};
 }
 
+static bool show_math = false;
+
 static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const Point a, const Point b)
 {
 	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(b.pos), IM_COL32(255, 50, 50, 255), 2.f);
@@ -104,6 +106,16 @@ static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const P
 
 	ImDrawList_AddLine(dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(arrw3), IM_COL32(255, 50, 50, 180), 1.5f);
 	ImDrawList_AddLine(dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(arrw4), IM_COL32(255, 50, 50, 180), 1.5f);
+
+	if (show_math) {
+		ImVec2 theta_pos = rotate((ImVec2){30.f, 0.f}, (a0 + a1) / 2.f);
+		theta_pos = (ImVec2){a.pos.x + theta_pos.x, a.pos.y + theta_pos.y};
+
+		char buf[100];
+		snprintf(buf, sizeof(buf), "%f", a1 * RAD_TO_DEG);
+		
+		ImDrawList_AddText_Vec2(dl, TO_REAL_COORDS(theta_pos), IM_COL32(255, 255, 255, 255), buf, NULL);
+	}
 }
 
 static void frame(void)
@@ -123,6 +135,7 @@ static void frame(void)
 	igSetNextWindowSize((ImVec2){400, 100}, ImGuiCond_Once);
 	igBegin("Hello Dear ImGui!", 0, ImGuiWindowFlags_None);
 	igColorEdit3("Background", &state.pass_action.colors[0].value.r, ImGuiColorEditFlags_None);
+	igCheckbox("Show Math", &show_math);
 	igEnd();
 
 	ImDrawList *dl = igGetBackgroundDrawList_Nil();
