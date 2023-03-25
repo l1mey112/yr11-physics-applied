@@ -1,8 +1,26 @@
 DEMOS_SRC = $(wildcard src/*.c)
 DEMOS = $(patsubst src/%.c, public/%.html, $(DEMOS_SRC))
+DEMOS_URLS = $(patsubst public/%.html, /%.html, $(DEMOS))
+
+CFLAGS = 
+FCFLAGS =
+
+ifeq ($(PROD),1)
+  CFLAGS += -Oz --closure=1 -flto
+  FCFLAGS += -sMINIFY_HTML -sEVAL_CTORS
+endif
 
 .PHONY: all
-all: build/ public/ build/libsokol.a build/libcimgui.a $(DEMOS)
+all: build/ public/ build/libsokol.a build/libcimgui.a site
+
+.PHONY: run
+run: all
+	emrun public/index.html
+
+.PHONY: site
+site: $(DEMOS)
+	> public/index.html
+	for w in $(DEMOS_URLS); do echo "<a href=\"$${w}\">$${w}</a>" >> public/index.html; done
 
 .PHONY: clean
 clean:
@@ -15,32 +33,35 @@ public/:
 	mkdir public
 
 public/%.html: src/%.c
-	emcc -o $@ $< \
+	emcc -o $@ $< $(CFLAGS) $(FCFLAGS) \
 		--shell-file sokol/shell.html \
 		-sNO_FILESYSTEM=1 \
 		-sASSERTIONS=0 \
 		-sMALLOC=emmalloc \
-		--closure=1 \
 		-Isokol -Icimgui -Iinclude \
 		build/libsokol.a build/libcimgui.a
+ifeq ($(PROD),1)
+	wasm-opt $(patsubst %.html, %.wasm, $@) -o $(patsubst %.html, %.wasm, $@) \
+		--dce --gufa --flatten --rereloop -Oz --gufa --dce -Oz --converge -Oz
+endif
 
 build/libsokol.a:
-	emcc -c sokol/sokol.c -o build/libsokol.o -std=gnu11 -Isokol -Icimgui
+	emcc -c sokol/sokol.c -o build/libsokol.o $(CFLAGS) -std=gnu11 -Isokol -Icimgui
 	emar qc build/libsokol.a build/libsokol.o
 	emranlib build/libsokol.a
 
 build/libcimgui.a:
-	em++ -std=gnu++11 -Isokol -Icimgui \
+	em++ -std=gnu++11 -Isokol -Icimgui $(CFLAGS) \
 		-c cimgui/cimgui.cpp -o build/cimgui.o
-	em++ -std=gnu++11 -Isokol -Icimgui \
+	em++ -std=gnu++11 -Isokol -Icimgui $(CFLAGS) \
 		-c cimgui/imgui/imgui.cpp -o build/imgui.o
-	em++ -std=gnu++11 -Isokol -Icimgui \
+	em++ -std=gnu++11 -Isokol -Icimgui $(CFLAGS) \
 		-c cimgui/imgui/imgui_widgets.cpp -o build/imgui_widgets.o
-	em++  -std=gnu++11 -Isokol -Icimgui \
+	em++  -std=gnu++11 -Isokol -Icimgui $(CFLAGS) \
 		-c cimgui/imgui/imgui_draw.cpp -o build/imgui_draw.o
-	em++ -std=gnu++11 -Isokol -Icimgui \
+	em++ -std=gnu++11 -Isokol -Icimgui $(CFLAGS) \
 		-c cimgui/imgui/imgui_tables.cpp -o build/imgui_tables.o
-	em++ -std=gnu++11 -Isokol -Icimgui \
+	em++ -std=gnu++11 -Isokol -Icimgui $(CFLAGS) \
 		-c cimgui/imgui/imgui_demo.cpp -o build/imgui_demo.o
 		
 	emar qc build/libcimgui.a \
