@@ -8,9 +8,6 @@ The demos included in this repository are written purely in the C programming la
 
 Supporting libraries [sokol](https://github.com/floooh/sokol) and [Dear ImGui](https://github.com/ocornut/imgui) are used as an abstraction layer over the specifics of the web/browser and allow me to focus on writing the demos, not hassle with the looks.
 
-# Usage
-To use the demos, simply visit my website and navigate to the Year 11 Physics Applied section. From there, you can select any demo you would like to run and begin interacting with it.
-
 All of the code in this repository is licensed under the MIT open source license. See the LICENSE file for more details.
 
 # Compilation
