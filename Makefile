@@ -11,7 +11,7 @@ ifeq ($(PROD),1)
 endif
 
 .PHONY: all
-all: build/ public/ build/libsokol.a build/libcimgui.a site
+all: build/ public/ site
 
 .PHONY: run
 run: all
@@ -32,7 +32,7 @@ build/:
 public/:
 	mkdir public
 
-public/%.html: src/%.c
+public/%.html: src/%.c build/libsokol.a build/libcimgui.a
 	emcc -o $@ $< $(CFLAGS) $(FCFLAGS) \
 		--shell-file sokol/shell.html \
 		-sNO_FILESYSTEM=1 \
