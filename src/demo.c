@@ -111,6 +111,7 @@ static inline float norm_degrees(float a)
 
 #define RESULTANT_VECTOR_COL IM_COL32(54, 229, 223, 60)
 #define RESULTANT_VECTOR_COL_FULL IM_COL32(54, 229, 223, 255)
+#define TIP_END_POINT_COL IM_COL32(255, 255, 255, 40)
 
 static void vector_final(ImDrawList *dl, const ImVec2 world_center)
 {
@@ -178,7 +179,7 @@ static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const P
 	if (dx < 0.f && dy > 0.f)
 		a0 = -M_PI;
 
-	float arc_rad = m_min(m_abs(dx), m_abs(dy)) * 0.4f;
+	float arc_rad = m_max(m_abs(dx), m_abs(dy)) * 0.4f;
 	if (arc_rad > 40.f)
 		arc_rad = 40.f;
 
@@ -229,10 +230,10 @@ static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const P
 static inline ImVec4 u32_to_vec4(ImU32 color)
 {
 	return (ImVec4){
-		(float)((color >> 16) & 0xFF) / 255.0f,
-		(float)((color >> 8) & 0xFF) / 255.0f,
-		(float)(color & 0xFF) / 255.0f,
-		(float)((color >> 24) & 0xFF) / 255.0f};
+		(float)((color >> IM_COL32_R_SHIFT) & 0xFF) / 255.0f,
+		(float)((color >> IM_COL32_G_SHIFT) & 0xFF) / 255.0f,
+		(float)((color >> IM_COL32_B_SHIFT) & 0xFF) / 255.0f,
+		(float)((color >> IM_COL32_A_SHIFT) & 0xFF) / 255.0f};
 }
 
 #define RECT_OFFSET 10.f
@@ -285,6 +286,7 @@ static void frame(void)
 	}
 
 	static int is_hitting = -1;
+	int is_hovering = -1;
 
 	for (int idx = 0; idx < g_points_len; idx++)
 	{
@@ -307,14 +309,18 @@ static void frame(void)
 	}
 	else
 	{
+		if (is_hitting != -1)
+			is_hovering = is_hitting;
 		is_hitting = -1;
 	}
 
 	for (int idx = 0; idx < g_points_len; idx++)
 	{
 		Point point = g_points[idx];
-		if (is_hitting == idx || idx + 1 == g_points_len)
-			ImDrawList_AddCircleFilled(dl, TO_REAL_COORDS(point.pos), POINTS_RAD, IM_COL32(255, 255, 255, 40), 0);
+		if (is_hovering == idx)
+			ImDrawList_AddCircleFilled(dl, TO_REAL_COORDS(point.pos), POINTS_RAD * 1.1f, IM_COL32(255, 255, 255, 80), 0);
+		else if (is_hitting == idx || idx + 1 == g_points_len)
+			ImDrawList_AddCircleFilled(dl, TO_REAL_COORDS(point.pos), POINTS_RAD, TIP_END_POINT_COL, 0);
 		else
 			ImDrawList_AddCircleFilled(dl, TO_REAL_COORDS(point.pos), POINTS_RAD, point.col, 0);
 	}
@@ -398,20 +404,21 @@ static void frame(void)
 	igSeparator();
 	igCheckbox("Show Math Overlay", &show_math);
 	igCheckbox("Show About", &show_about);
-	igSeparator();
+	/* igSeparator();
 	{
 		Point last_point = g_points[0];
 		for (int idx = 1; idx < g_points_len; idx++)
 		{
 			Point point = g_points[idx];
-			igTextColored(u32_to_vec4(point.col), "(%g, %g)", point.pos.x, point.pos.y);
+			igTextColored(u32_to_vec4(last_point.col), "(%g, %g)", last_point.pos.x, last_point.pos.y);
 			igSameLine(0, 0);
 			igText(" -> ");
 			igSameLine(0, 0);
-			igTextColored(u32_to_vec4(last_point.col), "(%g, %g)", last_point.pos.x, last_point.pos.y);
+			ImU32 ecol = idx + 1 == g_points_len ? TIP_END_POINT_COL : point.col;
+			igTextColored(u32_to_vec4(ecol), "(%g, %g)", point.pos.x, point.pos.y);
 			last_point = point;
 		}
-	}
+	} */
 	igEnd();
 
 	if (show_about) {
