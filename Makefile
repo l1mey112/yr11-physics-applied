@@ -19,8 +19,11 @@ run: all
 
 .PHONY: clean
 clean:
+	find public/ \
+		! -name 'index.html' \
+		! -name 'main.css' \
+		-type f -exec rm -f {} +
 	rm -rf build/
-	rm -rf public/
 
 build/:
 	mkdir build

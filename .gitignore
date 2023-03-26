@@ -3,3 +3,4 @@ build/
 public/*
 !public/index.html
 !public/main.css
+build.sh
