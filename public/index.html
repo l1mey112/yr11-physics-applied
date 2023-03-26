@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Year 11 Physics, Applied.</title>
+	<link rel="stylesheet" href="/main.css">
+	<meta name="description" content="A collection of interactive demonstrations and physics simulations.">
+	<!-- KaTex -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+	<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js" integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4" crossorigin="anonymous"></script>
+	<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+	<!-- /KaTex -->
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '$', right: '$', display: false}]})})
+	</script>
+</head>
+<body>
+    <h1 class="page-title">Year 11 Physics, Applied.</h1>
+    
+    <article>
+		<p>Combining my passion for physics and computer science, <strong>Year 11 Physics, Applied</strong> is a repository of interactive demonstrations and simulations designed to visualize and help myself and others understand the physics concepts taught in <strong>my Year 11 Physics class.</strong></p>
+	  	<p>This website and demos are maintained by me, <i><a href="https://l-m.dev/">l-m.dev.</a></i></p>
+		<p>I use the C programming language to create these demos, which are compiled to WebAssembly using Emscripten. Our demos also use supporting libraries like sokol and Dear ImGui, which abstract away the complexities of the web, allowing me to focus on creating engaging and effective demos.</p>
+		<p>All of the code in our repository <a href="https://github.com/l1mey112/yr11-physics-applied">yr11-physics-applied</a> on GitHub is licensed under the MIT open source license, so you can use it however you like.</p>
+		<p>FLOCCO</p>
+	</article>
+	<article>
+		<h2><a href="/vector_addition.html">Vector Addition</a> --- "Tip To Tail"</h3>
+		<p class="meta">Mar 25, 2023</p>
+		<p>To sum two vectors, use trigonometry to find the $x$ and $y$ components of each vector.</p>
+		$$
+		\begin{align*}
+		\vec{s} + \vec{p} &= \vec{r} \\
+		s \cos \theta_s + p \cos \theta_p &= r_{x} \\
+		s \sin \theta_s + p \sin \theta_p &= r_{y} \\
+		\end{align*}
+		$$
+		<div class="ifc">
+			<iframe loading=lazy src="/vector_addition.html" frameborder="0"></iframe>
+			<a class="ifa" href="/vector_addition.html"></a>
+		</div>
+	</article>
+	<article>
+		<h2><a href="/friction_coefficients.html">Static And Kinematic Friction Coefficients</a></h3>
+		<p class="meta">Mar 26, 2023</p>
+		<p>The static friction coefficient $\mu_{s}$ and the kinematic friction coefficent $\mu_{k}$. Static friction keeps objects at rest staying at rest, and the kinematic friction slows down objects in already in motion.</p>
+		<p>An objects friction is in direct relationship with the force applied from another object contacting against it, the normal force $F_n$. </p>
+		$$
+		\begin{align*}
+		F_{N} &= mg \\
+		F_{f_{s}} &\leq \mu_{s} F_{N} \\
+		F_{f_{k}} &= \mu_{k} F_{N} \\
+		\end{align*}
+		$$
+		<div class="ifc">
+			<iframe loading=lazy src="/friction_coefficients.html" frameborder="0"></iframe>
+			<a class="ifa" href="/friction_coefficients.html"></a>
+		</div>
+	</article>
+	<footer>
+		&copy; 2023 <a href="https://l-m.dev/">l-m.dev</a>
+	</footer>
+</body>
+</html>

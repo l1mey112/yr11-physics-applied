@@ -108,6 +108,12 @@ EM_JS(void, open_in_new_tab, (const char *msg), {
 	window.open(UTF8ToString(msg), "mozillaTab");
 });
 
+// Is this page embedded inside an `iframe`?
+//
+EM_JS(bool, is_inside_iframe, (), {
+	return window.location !== window.parent.location;
+});
+
 // SOKOL
 
 static struct
@@ -172,6 +178,9 @@ sapp_desc sokol_main(int argc, char *argv[])
 	sg_commit();
 
 static void ABOUT_WIDGET() {
+	if (is_inside_iframe())
+		return;
+
 	ImGuiWindowFlags pinned_window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 	ImVec2 window_pos;
 	const ImGuiViewport* viewport = igGetMainViewport();

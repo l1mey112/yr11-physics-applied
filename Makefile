@@ -11,15 +11,11 @@ ifeq ($(PROD),1)
 endif
 
 .PHONY: all
-all: build/ public/ public/index.html
+all: build/ public/ $(DEMOS)
 
 .PHONY: run
 run: all
 	emrun public/index.html
-
-public/index.html: $(DEMOS)
-	> public/index.html
-	for w in $(DEMOS_URLS); do echo "<a href=\"$${w}\">$${w}</a>" >> public/index.html; done
 
 .PHONY: clean
 clean:
@@ -31,7 +27,7 @@ build/:
 public/:
 	mkdir public
 
-public/%.html: src/%.c build/libsokol.a build/libcimgui.a
+public/%.html: src/%.c build/libsokol.a build/libcimgui.a src/demos.h
 	emcc -o $@ $< $(CFLAGS) $(FCFLAGS) \
 		--shell-file sokol/shell.html \
 		-sNO_FILESYSTEM=1 \

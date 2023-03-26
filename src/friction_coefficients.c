@@ -139,6 +139,7 @@ static void frame(void)
 
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
+	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Hello Dear ImGui!", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	igTextWrapped("Welcome!");
 	igSeparator();
@@ -152,14 +153,15 @@ static void frame(void)
 
 	igSetNextWindowPos((ImVec2){io->DisplaySize.x / 2.0f, io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
+	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	igSliderFloat("Mass", &mass, 0.1f, 25.f, "%g kg", ImGuiSliderFlags_AlwaysClamp);
 	igSliderFloat("Applied Force", &f_applied, 1.f, 100.f, "%g N", ImGuiSliderFlags_AlwaysClamp);
 	igSeparator();
 	{
 		const char* items[] = { "Fictional object", "Rubber on concrete", "Shoes on wood", "Steel on ice" };
-		const float static_coefficents[] = { 0.6f, 0.5f, 1.0f, 0.9f, 0.4f };
-		const float kinetic_coefficents[] = { 0.4f, 0.3f, 0.7f, 0.7f, 0.02f };
+		const float static_coefficents[] = { 0.6f, 1.0f, 0.9f, 0.4f };
+		const float kinetic_coefficents[] = { 0.4f, 0.7f, 0.7f, 0.02f };
         static int item_curr = 0;
 		if (item_curr != -1) {
 			static_coefficient = static_coefficents[item_curr];

@@ -274,6 +274,7 @@ static void frame(void)
 
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
+	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Hello Dear ImGui!", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
 		igTextWrapped("Welcome!");

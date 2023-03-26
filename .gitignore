@@ -1,3 +1,5 @@
 .vscode/
 build/
-public/
+public/*
+!public/index.html
+!public/main.css
