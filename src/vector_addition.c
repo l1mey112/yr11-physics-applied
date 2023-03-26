@@ -37,11 +37,6 @@ static Point g_points[POINTS_CAP] = {
 };
 static int g_points_len = 4;
 
-static ImVec2 rotate(ImVec2 v, float theta)
-{
-	return (ImVec2){v.x * cosf(theta) - v.y * sinf(theta), v.x * sinf(theta) + v.y * cosf(theta)};
-}
-
 static bool show_math = false;
 static bool show_about = true;
 
@@ -132,16 +127,16 @@ static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const P
 	ImDrawList_PathArcTo(dl, TO_REAL_COORDS(a.pos), arc_rad, a0, a1, 0);
 	ImDrawList_PathStroke(dl, IM_COL32(255, 255, 255, 70), ImDrawFlags_None, 1.5f);
 
-	/* ImVec2 arrw0 = rotate((ImVec2){30.f, 0.f}, a1_r + 45.f * DEG_TO_RAD);
-	ImVec2 arrw1 = rotate((ImVec2){30.f, 0.f}, a1_r - 45.f * DEG_TO_RAD);
+	/* ImVec2 arrw0 = m_vrotate((ImVec2){30.f, 0.f}, a1_r + 45.f * DEG_TO_RAD);
+	ImVec2 arrw1 = m_vrotate((ImVec2){30.f, 0.f}, a1_r - 45.f * DEG_TO_RAD);
 	arrw0 = (ImVec2){a.pos.x + arrw0.x, a.pos.y + arrw0.y};
 	arrw1 = (ImVec2){a.pos.x + arrw1.x, a.pos.y + arrw1.y};
 
 	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(arrw0), IM_COL32(255, 50, 50, 120), 1.5f);
 	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(arrw1), IM_COL32(255, 50, 50, 120), 1.5f); */
 
-	ImVec2 arrw3 = rotate((ImVec2){40.f, 0.f}, a1_r + 225.f * DEG_TO_RAD);
-	ImVec2 arrw4 = rotate((ImVec2){40.f, 0.f}, a1_r - 225.f * DEG_TO_RAD);
+	ImVec2 arrw3 = m_vrotate((ImVec2){40.f, 0.f}, a1_r + 225.f * DEG_TO_RAD);
+	ImVec2 arrw4 = m_vrotate((ImVec2){40.f, 0.f}, a1_r - 225.f * DEG_TO_RAD);
 	arrw3 = (ImVec2){b.pos.x + arrw3.x, b.pos.y + arrw3.y};
 	arrw4 = (ImVec2){b.pos.x + arrw4.x, b.pos.y + arrw4.y};
 
@@ -149,7 +144,7 @@ static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const P
 	ImDrawList_AddLine(dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(arrw4), a.col, 1.5f);
 
 	if (show_math) {
-		ImVec2 theta_pos = rotate((ImVec2){40.f, 0.f}, a1);
+		ImVec2 theta_pos = m_vrotate((ImVec2){40.f, 0.f}, a1);
 		theta_pos = (ImVec2){a.pos.x + theta_pos.x, a.pos.y + theta_pos.y};
 
 		char buf[50];
@@ -180,36 +175,10 @@ static void frame(void)
 	FRAME_PASS_BEGIN
 
 	ImGuiIO *io = igGetIO();
-
 	ImDrawList *dl = igGetBackgroundDrawList_Nil();
-
-	ImVec2 canvas_sz = io->DisplaySize;
-	ImVec2 canvas_p0 = {0.f, 0.f};
-	ImVec2 canvas_p1 = {canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y};
-
-	static ImVec2 delta_scroll = {0.f, 0.f};
-	ImDrawList_AddRectFilled(dl, canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255), 0.f, 0);
-	if (igIsMouseDragging(ImGuiMouseButton_Right, 0.f))
-	{
-		delta_scroll.x += io->MouseDelta.x;
-		delta_scroll.y += io->MouseDelta.y;
-	}
-	ImVec2 world_center = {delta_scroll.x + canvas_sz.x / 2.0f, delta_scroll.y + canvas_sz.y / 2.0f};
-	const float GRID_STEP = 100.0f;
-	for (float x = fmodf(world_center.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
-	{
-		if (x == world_center.x)
-			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x + x, canvas_p0.y}, (ImVec2){canvas_p0.x + x, canvas_p1.y}, IM_COL32(255, 255, 255, 100), 1.0f);
-		else
-			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x + x, canvas_p0.y}, (ImVec2){canvas_p0.x + x, canvas_p1.y}, IM_COL32(200, 200, 200, 40), 1.0f);
-	}
-	for (float y = fmodf(world_center.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
-	{
-		if (y == world_center.y)
-			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(255, 255, 255, 100), 1.0f);
-		else
-			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(200, 200, 200, 40), 1.0f);
-	}
+	
+	ImVec2 world_center = HANDLE_PAN();
+	RENDER_GRID(world_center);
 
 	static int is_hitting = -1;
 	int is_hovering = -1;
@@ -306,7 +275,6 @@ static void frame(void)
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igBegin("Hello Dear ImGui!", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	igPushStyleColor_U32(ImGuiCol_Text, IM_COL32(225, 225, 225, 255));
 	{
 		igTextWrapped("Welcome!");
 		igSeparator();
@@ -321,7 +289,6 @@ static void frame(void)
 		igTextWrapped("Right click and drag to pan around the scene.");
 		igTextWrapped("Left click and drag on the circle control points to move the vectors around.");
 	}
-	igPopStyleColor(1);
 	igPushStyleColor_U32(ImGuiCol_Text, RESULTANT_VECTOR_COL_FULL);
 	{
 		igTextWrapped("The resultant vector is in this special colour.");
@@ -348,32 +315,7 @@ static void frame(void)
 	igEnd();
 
 	if (show_about) {
-		ImGuiWindowFlags pinned_window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-		ImVec2 window_pos;
-		const ImGuiViewport* viewport = igGetMainViewport();
-		const float PAD = 10.0f;
-		// Bottom Left!
-		window_pos.x = viewport->WorkPos.x + PAD;
-		window_pos.y = viewport->WorkPos.y + viewport->WorkSize.y - PAD;
-		igSetNextWindowPos(window_pos, ImGuiCond_Always, (ImVec2){0.f, 1.f});
-		igBegin("About", 0, pinned_window_flags);
-		{
-			igText("Copyright (C) 2022 l-m.dev.");
-			igText("Software is held according to the MIT open source license.");
-			igSeparator();
-			/* if (igButton("https://l-m.dev", (ImVec2){0.f, 0.f})) {
-				open_in_new_tab("https://l-m.dev");
-			} */
-			
-			igText("Created at ");
-			igSameLine(0, 0);
-			if (igButton("https://l-m.dev", (ImVec2){0.f, 0.f})) {
-				open_in_new_tab("https://l-m.dev");
-			}
-			igSameLine(0, 0);
-			igText(" in C, using Emscripten and Dear ImGui.");
-		}
-		igEnd();
+		ABOUT_WIDGET();
 	}
 
 	FRAME_PASS_END

@@ -10,6 +10,8 @@ Supporting libraries [sokol](https://github.com/floooh/sokol) and [Dear ImGui](h
 
 All of the code in this repository is licensed under the MIT open source license. See the LICENSE file for more details.
 
+<!-- To use the demos, simply visit my website and navigate to the Year 11 Physics Applied section. From there, you can select any demo you would like to run and begin interacting with it. -->
+
 # Compilation
 
 I don't like `cmake`, too complicated and not enough control. I took the existing compilation for `libsokol.a` and `libcimgui.a`, then blindly seralised it into a single `Makefile`.

@@ -36,6 +36,8 @@
 #define DEG_TO_RAD (M_PI / 180.f)
 #define RAD_TO_DEG (180.f / M_PI)
 
+#define V2ZERO (ImVec2){0.f, 0.f}
+
 #define TO_REAL_COORDS(vec) \
 	m_vadd(m_real_coords(vec), world_center)
 #define TO_RELA_COORDS(vec) \
@@ -54,6 +56,26 @@ static inline ImVec2 m_vadd(ImVec2 a, ImVec2 b)
 static inline ImVec2 m_vsub(ImVec2 a, ImVec2 b)
 {
 	return (ImVec2){a.x - b.x, a.y - b.y};
+}
+
+static inline ImVec2 m_vmul(ImVec2 a, ImVec2 b)
+{
+	return (ImVec2){a.x * b.x, a.y * b.y};
+}
+
+static inline ImVec2 m_vmuls(ImVec2 a, float b)
+{
+	return (ImVec2){a.x * b, a.y * b};
+}
+
+static inline ImVec2 m_rct(ImVec2 world_center, ImVec2 a)
+{
+	return m_vadd(m_real_coords(a), world_center);
+}
+
+static ImVec2 m_vrotate(ImVec2 v, float theta)
+{
+	return (ImVec2){v.x * cosf(theta) - v.y * sinf(theta), v.x * sinf(theta) + v.y * cosf(theta)};
 }
 
 static inline float m_max(float a, float b)
@@ -148,5 +170,80 @@ sapp_desc sokol_main(int argc, char *argv[])
 	simgui_render(); \
 	sg_end_pass(); \
 	sg_commit();
+
+static void ABOUT_WIDGET() {
+	ImGuiWindowFlags pinned_window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+	ImVec2 window_pos;
+	const ImGuiViewport* viewport = igGetMainViewport();
+	const float PAD = 10.0f;
+	// Bottom Left!
+	window_pos.x = viewport->WorkPos.x + PAD;
+	window_pos.y = viewport->WorkPos.y + viewport->WorkSize.y - PAD;
+	igSetNextWindowPos(window_pos, ImGuiCond_Always, (ImVec2){0.f, 1.f});
+	igBegin("About", 0, pinned_window_flags);
+	{
+		igText("Copyright (C) 2022 l-m.dev.");
+		igText("Software is held according to the MIT open source license.");
+		igSeparator();
+		igText("Created at ");
+		igSameLine(0, 0);
+		if (igButton("https://l-m.dev", (ImVec2){0.f, 0.f})) {
+			open_in_new_tab("https://l-m.dev");
+		}
+		igSameLine(0, 0);
+		igText(" in C, using Emscripten and Dear ImGui.");
+		igSeparator();
+		igText("Full source code resides at ");
+		igSameLine(0, 0);
+		if (igButton("l1mey112/yr11-physics-applied", (ImVec2){0.f, 0.f})) {
+			open_in_new_tab("https://github.com/l1mey112/yr11-physics-applied");
+		}
+	}
+	igEnd();
+}
+
+static void RENDER_GRID(ImVec2 world_center) {
+	ImGuiIO *io = igGetIO();
+	ImDrawList *dl = igGetBackgroundDrawList_Nil();
+
+	ImVec2 canvas_sz = io->DisplaySize;
+	ImVec2 canvas_p0 = {0.f, 0.f};
+	ImVec2 canvas_p1 = {canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y};
+
+	ImDrawList_AddRectFilled(dl, canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255), 0.f, 0);
+	
+	const float GRID_STEP = 100.0f;
+	for (float x = fmodf(world_center.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
+	{
+		if (x == world_center.x)
+			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x + x, canvas_p0.y}, (ImVec2){canvas_p0.x + x, canvas_p1.y}, IM_COL32(255, 255, 255, 100), 1.0f);
+		else
+			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x + x, canvas_p0.y}, (ImVec2){canvas_p0.x + x, canvas_p1.y}, IM_COL32(200, 200, 200, 40), 1.0f);
+	}
+	for (float y = fmodf(world_center.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
+	{
+		if (y == world_center.y)
+			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(255, 255, 255, 100), 1.0f);
+		else
+			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(200, 200, 200, 40), 1.0f);
+	}
+}
+
+static ImVec2 HANDLE_PAN() {
+	ImGuiIO *io = igGetIO();
+	ImDrawList *dl = igGetBackgroundDrawList_Nil();
+
+	ImVec2 canvas_sz = io->DisplaySize;
+
+	static ImVec2 delta_scroll = {0.f, 0.f};
+	if (igIsMouseDragging(ImGuiMouseButton_Right, 0.f))
+	{
+		delta_scroll.x += io->MouseDelta.x;
+		delta_scroll.y += io->MouseDelta.y;
+	}
+	ImVec2 world_center = {delta_scroll.x + canvas_sz.x / 2.0f, delta_scroll.y + canvas_sz.y / 2.0f};
+
+	return world_center;
+}
 
 #endif // DEMOS_H

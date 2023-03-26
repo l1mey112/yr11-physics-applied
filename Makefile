@@ -6,19 +6,18 @@ CFLAGS =
 FCFLAGS =
 
 ifeq ($(PROD),1)
-  CFLAGS += -Oz --closure=1 -flto
-  FCFLAGS += -sMINIFY_HTML -sEVAL_CTORS
+	CFLAGS += -Oz --closure=1 -flto
+	FCFLAGS += -sMINIFY_HTML -sEVAL_CTORS
 endif
 
 .PHONY: all
-all: build/ public/ site
+all: build/ public/ public/index.html
 
 .PHONY: run
 run: all
 	emrun public/index.html
 
-.PHONY: site
-site: $(DEMOS)
+public/index.html: $(DEMOS)
 	> public/index.html
 	for w in $(DEMOS_URLS); do echo "<a href=\"$${w}\">$${w}</a>" >> public/index.html; done
 
