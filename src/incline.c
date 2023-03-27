@@ -44,7 +44,21 @@ static void frame(void)
 	ImDrawList_AddTriangleFilled(dl, p0, p1, p2, IM_COL32(36,36,36, 255));
 
 	const float mid_end_y = tanf(incline_rad) * wc.x;
-	r
+	ImVec2 r0 = {-OBJ_HALF_X, OBJ_HALF_Y};
+	ImVec2 r1 = {OBJ_HALF_X, OBJ_HALF_Y};
+	ImVec2 r2 = {OBJ_HALF_X, -OBJ_HALF_Y};
+	ImVec2 r3 = {-OBJ_HALF_X, -OBJ_HALF_Y};
+	r0 = m_vrotate(r0, incline_rad);
+	r1 = m_vrotate(r1, incline_rad);
+	r2 = m_vrotate(r2, incline_rad);
+	r3 = m_vrotate(r3, incline_rad);
+
+	r0.y -= mid_end_y;
+	r1.y -= mid_end_y;
+	r2.y -= mid_end_y;
+	r3.y -= mid_end_y;
+
+	ImDrawList_AddQuad(dl, m_rct(wc, r0), m_rct(wc, r1), m_rct(wc, r2), m_rct(wc, r3), IM_COL32(255,255,255, 255), 1.f);
 
 	ABOUT_WIDGET();
 	FRAME_PASS_END
