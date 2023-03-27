@@ -22,6 +22,8 @@
 #ifndef DEMOS_H
 #define DEMOS_H
 
+#include <math.h>
+#include <stdbool.h>
 #include "sokol_app.h"
 #include "sokol_gfx.h"
 #include "sokol_log.h"
@@ -30,7 +32,6 @@
 #include "cimgui.h"
 #include "sokol_imgui.h"
 #include "HandmadeMath.h"
-#include <math.h>
 #include <emscripten.h>
 
 #define DEG_TO_RAD (M_PI / 180.f)
