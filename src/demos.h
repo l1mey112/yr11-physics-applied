@@ -93,6 +93,9 @@ static inline float m_abs(float a)
 	return a < 0.f ? -a : a;
 }
 
+#define HRZ_VEC \
+	(ImVec2) { 1.f, 0.f }
+
 static inline ImVec4 u32_to_vec4(ImU32 color)
 {
 	return (ImVec4){
@@ -247,8 +250,12 @@ static ImVec2 HANDLE_PAN() {
 	static ImVec2 delta_scroll = {0.f, 0.f};
 	if (igIsMouseDragging(ImGuiMouseButton_Right, 0.f))
 	{
+		#ifndef HANDLE_PAN_NO_X
 		delta_scroll.x += io->MouseDelta.x;
+		#endif
+		#ifndef HANDLE_PAN_NO_Y
 		delta_scroll.y += io->MouseDelta.y;
+		#endif
 	}
 	ImVec2 world_center = {delta_scroll.x + canvas_sz.x / 2.0f, delta_scroll.y + canvas_sz.y / 2.0f};
 

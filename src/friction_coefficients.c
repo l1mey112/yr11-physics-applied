@@ -54,9 +54,6 @@ static void object_show_midpoint(ImVec2 wc, Object *obj)
 	ImDrawList_AddLine(dl, m_rct(wc, p2), m_rct(wc, p3), IM_COL32_BLACK, 1.f);
 }
 
-#define HRZ_VEC \
-	(ImVec2) { 1.f, 0.f }
-
 #define FORCE_VEC_TIMES 8.f
 #define TRIDISP_S 0.03f
 #define TRIDISP_L 0.9f
