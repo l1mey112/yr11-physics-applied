@@ -1,4 +1,4 @@
-# [Year 11 Physics, Applied.](https://physics-applied.l-m.dev/)
+# [Year 11 Physics, Applied.](https://l-m.dev/physics-applied)
 
 Welcome! This repository is a collection of interactive demonstrations and physics simulations designed to visualise and reinforce the physics concepts I have learned in my Year 11 physics class.
 
@@ -6,7 +6,7 @@ Each demo will be interactive and will cover a certain noteworthy topic. They wi
 
 The demos included in this repository are written purely in the C programming language and use Emscripten to compile them to WebAssembly.
 
-**Visit the website at [physics-applied.l-m.dev](https://physics-applied.l-m.dev/)**
+**Visit the page at [l-m.dev/physics-applied](https://l-m.dev/physics-applied)**
 
 Supporting libraries [sokol](https://github.com/floooh/sokol) and [Dear ImGui](https://github.com/ocornut/imgui) are used as an abstraction layer over the specifics of the web/browser and allow me to focus on writing the demos, not hassle with the looks.
 
