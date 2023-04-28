@@ -119,6 +119,8 @@ static Object g_obj = {.pos = {0.f, 50.f}};
 #define F_COLOUR IM_COL32(240, 100, 100, 255)
 #define F_META_COLOUR IM_COL32(100, 120, 255, 255)
 
+static bool show_about = true;
+
 static void frame(void)
 {
 	FRAME_PASS_BEGIN
@@ -146,6 +148,7 @@ static void frame(void)
 	igSeparator();
 	igTextWrapped("An interactive free body diagram of an object at rest is shown. Change properties such as it's mass and applied force using the control window.");
 	igTextWrapped("The static and kinetic friction coefficents can be edited. A progress bar showing the force required to overpower the max static friction is underneath.");
+	igCheckbox("Show About", &show_about);
 	igEnd();
 
 	igSetNextWindowPos((ImVec2){io->DisplaySize.x / 2.0f, io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
@@ -218,7 +221,9 @@ static void frame(void)
 
 	igEnd();
 
-	ABOUT_WIDGET();
+	if (show_about) {
+		ABOUT_WIDGET();
+	}
 
 	FRAME_PASS_END
 }
