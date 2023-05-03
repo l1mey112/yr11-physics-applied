@@ -123,6 +123,10 @@ EM_JS(bool, is_inside_iframe, (), {
 static ImDrawList *__dl;
 static ImGuiIO *__io;
 
+#ifdef USE_INIT2
+static void init2(void);
+#endif // USE_INIT2
+
 static struct
 {
 	sg_pass_action pass_action;
@@ -139,6 +143,10 @@ static void init(void)
 	// initial clear color
 	state.pass_action = (sg_pass_action){
 		.colors[0] = {.action = SG_ACTION_CLEAR, .value = {0.0f, 0.0f, 0.0f, 1.0f}}};
+	
+#ifdef USE_INIT2
+	init2();
+#endif // USE_INIT2
 }
 
 static void frame(void);

@@ -32,60 +32,112 @@ typedef struct Object Object;
 typedef struct World World;
 
 struct Object {
-    ImVec2 pos;
-    ImVec2 vel;
-    ImVec2 acc;
-    float mass;
+	ImVec2 pos;
+	ImVec2 vel;
+	ImVec2 acc;
+	float mass;
+	float rad;
 };
 
 struct World {
-    Object objects[MAX_OBJECTS];
-    int obj_count;
+	Object objects[MAX_OBJECTS];
+	int obj_count;
 } __world;
 
-bool world_add_object(ImVec2 pos, float mass)
+int world_add_object(ImVec2 pos, float mass, float rad)
 {
-    if __world.obj_count >= MAX_OBJECTS {
-        return false;
-    }
+	if (__world.obj_count >= MAX_OBJECTS) {
+		return -1;
+	}
 
-    __world.objects[__world.obj_count] = {
-        .pos = pos,
-        .__prev_pos = pos,
-        .mass = mass,
-    };
-    __world.obj_count++;
+	Object obj = {0};
+	obj.pos = pos;
+	obj.mass = mass;
+	obj.rad = rad;
 
-    return true;
+	int idx = __world.obj_count++;
+	__world.objects[idx] = obj;
+
+	return idx;
 }
 
-void world_collide(float dt)
-{
-    for (int i = 0; i < __world.obj_count; i++) {
-        Object *obj = &__world.objects[i]
+void world_integrate_collision(Object *obj1, Object *obj2) {
+	float dx = obj1->pos.x - obj2->pos.x;
+    float dy = obj1->pos.y - obj2->pos.y;
+    float dist_squared = dx * dx + dy * dy;
 
-        // semi-implicit euler
-        obj->vec.x += obj->acc.x * dt;
-        obj->vec.y += obj->acc.y * dt;
-        obj->pos.x += obj->vel.x * dt;
-        obj->pos.y += obj->vel.y * dt;
-    }
+    float sum_radii_squared = (obj1->rad + obj2->rad) * (obj1->rad + obj2->rad);
+
+    bool is_colliding = dist_squared < sum_radii_squared;
+
+	if (!is_colliding)
+		return;
+
+	// magnitude
+	float dist = sqrt(dist_squared);
+
+	// normal vectors, magnitude of 1.0f
+	float nx = dx / dist;
+	float ny = dy / dist;
+
+	float rvx = obj1->vel.x - obj2->vel.x;
+	float rvy = obj1->vel.y - obj2->vel.y;
+	float v_mag_normal = rvx * nx + rvy * ny;
+
+	// moving away from eachother
+	// TODO: assert false?
+	if (v_mag_normal > 0.f)
+		return;
+
+	// obj1->coeff + obj2->coeff
+	// 0.0: completely inelastic collision
+	// 1.0: completely elastic collision
+	// float e = (1.f + 1.f) / 2.f;	
+	float e = 0.f;
+
+	// implulse scalar
+	float j = -(1.f + e) * v_mag_normal;
+	j /= 1.f / obj1->mass + 1.f / obj2->mass;
+
+	float ximp = j * nx;
+	float yimp = j * ny;
+
+	// apply impulse, a = F / m
+	obj1->vel.x += 1.0f / obj1->mass * ximp;
+    obj1->vel.y += 1.0f / obj1->mass * yimp;
+    obj2->vel.x -= 1.0f / obj2->mass * ximp;
+    obj2->vel.y -= 1.0f / obj2->mass * yimp;
 }
 
 void world_integrate(float dt)
 {
-    for (int i = 0; i < __world.obj_count; i++) {
-        Object *obj = &__world.objects[i]
+	for (int i = 0; i < __world.obj_count; i++) {
+		Object *obj = &__world.objects[i];
 
-        // semi-implicit euler
-        obj->vel.x += obj->acc.x * dt;
-        obj->vel.y += obj->acc.y * dt;
-        {
-            
+		// semi-implicit euler
+		obj->vel.x += obj->acc.x * dt;
+		obj->vel.y += obj->acc.y * dt;
+	}
+
+	for (int i = 0; i < __world.obj_count; i++) {
+        for (int j = i + 1; j < __world.obj_count; j++) {
+            Object* obj1 = &__world.objects[i];
+            Object* obj2 = &__world.objects[j];
+
+            igText("(integrate!)");
+			world_integrate_collision(obj1, obj2);
         }
-        obj->pos.x += obj->vel.x * dt;
-        obj->pos.y += obj->vel.y * dt;
     }
+
+	for (int i = 0; i < __world.obj_count; i++) {
+		Object *obj = &__world.objects[i];
+
+		// semi-implicit euler
+		obj->pos.x += obj->vel.x * dt;
+		obj->pos.y += obj->vel.y * dt;
+		/* obj->acc.x = 0.f;
+		obj->acc.y = 0.f; */
+	}
 }
 
 #endif // WORLD_H

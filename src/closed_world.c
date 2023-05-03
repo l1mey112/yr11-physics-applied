@@ -19,9 +19,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
  * SOFTWARE.
 */
+#define USE_INIT2
 #include "demos.h"
+#include "world.h"
 
 static bool show_about = true;
+
+Object *obj;
+
+static void init2(void)
+{
+	world_add_object(V2ZERO, 100.f, 100.f);
+	obj = &__world.objects[world_add_object(V2ZERO, 100.f, 100.f)];
+	obj->pos.y = 350.f;
+	obj->vel.y = -100.f;
+}
 
 static void frame(void)
 {
@@ -42,14 +54,19 @@ static void frame(void)
 
 	acc += __io->DeltaTime;
 	while (acc >= phys_dt) {
-		// integrate()
+		world_integrate(phys_dt);
 		acc -= phys_dt;
 	}
 
-	//
-	BLIT_BG(IM_COL32(50, 50, 50, 255));
+	igText("(%f %f)", obj->vel.x, obj->vel.y);
 
+	BLIT_BG(IM_COL32(50, 50, 50, 255));
 	//RENDER_GRID(wc);
+
+	for (int i = 0; i < __world.obj_count; i++) {
+		Object *obj = &__world.objects[i];
+		ImDrawList_AddCircleFilled(__dl, m_rct(wc, obj->pos), obj->rad, IM_COL32(255, 255, 255, 255), 0);
+	}
 
 	if (show_about) {
 		ABOUT_WIDGET();
