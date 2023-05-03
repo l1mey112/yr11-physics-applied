@@ -33,25 +33,21 @@ typedef struct
 
 static void object_show(ImVec2 wc, Object *obj)
 {
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
-
 	ImVec2 rmin = m_vadd(obj->pos, OBJ_HALF_WIDTHS);
 	ImVec2 rmax = m_vsub(obj->pos, OBJ_HALF_WIDTHS);
 
-	ImDrawList_AddRectFilled(dl, m_rct(wc, rmin), m_rct(wc, rmax), IM_COL32(231,184,63, 255), 0.f, 0);
+	ImDrawList_AddRectFilled(__dl, m_rct(wc, rmin), m_rct(wc, rmax), IM_COL32(231,184,63, 255), 0.f, 0);
 }
 
 static void object_show_midpoint(ImVec2 wc, Object *obj)
 {
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
-
 	ImVec2 p0 = (ImVec2){obj->pos.x, obj->pos.y + 10.f};
 	ImVec2 p1 = (ImVec2){obj->pos.x, obj->pos.y - 10.f};
 	ImVec2 p2 = (ImVec2){obj->pos.x + 10.f, obj->pos.y};
 	ImVec2 p3 = (ImVec2){obj->pos.x - 10.f, obj->pos.y};
 
-	ImDrawList_AddLine(dl, m_rct(wc, p0), m_rct(wc, p1), IM_COL32_BLACK, 1.f);
-	ImDrawList_AddLine(dl, m_rct(wc, p2), m_rct(wc, p3), IM_COL32_BLACK, 1.f);
+	ImDrawList_AddLine(__dl, m_rct(wc, p0), m_rct(wc, p1), IM_COL32_BLACK, 1.f);
+	ImDrawList_AddLine(__dl, m_rct(wc, p2), m_rct(wc, p3), IM_COL32_BLACK, 1.f);
 }
 
 #define FORCE_VEC_TIMES 8.f
@@ -63,23 +59,21 @@ static void object_force(ImVec2 wc, Object *obj, float r_dir, float mag, ImU32 c
 	if (mag == 0.f)
 		return;
 	float rmag = mag * FORCE_VEC_TIMES;
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
 	ImVec2 tail = m_vadd(obj->pos, m_vmuls(m_vrotate(HRZ_VEC, r_dir), rmag));
 	ImVec2 p1 = m_vadd(obj->pos, m_vmuls(m_vrotate((ImVec2){TRIDISP_L, -TRIDISP_S}, r_dir), rmag));
 	ImVec2 p3 = m_vadd(obj->pos, m_vmuls(m_vrotate((ImVec2){TRIDISP_L, TRIDISP_S}, r_dir), rmag));
 
-	ImDrawList_AddLine(dl, m_rct(wc, obj->pos), m_rct(wc, tail), col, 2.f);
-	ImDrawList_AddTriangleFilled(dl, m_rct(wc, p1), m_rct(wc, tail), m_rct(wc, p3), col);
+	ImDrawList_AddLine(__dl, m_rct(wc, obj->pos), m_rct(wc, tail), col, 2.f);
+	ImDrawList_AddTriangleFilled(__dl, m_rct(wc, p1), m_rct(wc, tail), m_rct(wc, p3), col);
 	char buf[100];
 	snprintf(buf, sizeof(buf), "%s: %gN %g°", name, mag, r_dir * RAD_TO_DEG);
-	ImDrawList_AddText_Vec2(dl, m_rct(wc, p3), IM_COL32_WHITE, buf, NULL);
+	ImDrawList_AddText_Vec2(__dl, m_rct(wc, p3), IM_COL32_WHITE, buf, NULL);
 }
 
 static void object_force_side(ImVec2 wc, Object *obj, int dir, float mag, ImU32 col, const char *name, ImVec2 offset)
 {
 	if (mag == 0.f)
 		return;
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
 	ImVec2 vdir = (ImVec2[]){
 		{1.f, 0.f},
 		{0.f, 1.f},
@@ -107,11 +101,11 @@ static void object_force_side(ImVec2 wc, Object *obj, int dir, float mag, ImU32 
 	ImVec2 ftext = m_vadd(obj->pos, m_vadd(m_vadd(m_vmuls(p3dir, rmag + 2.5f), (ImVec2){0.f, 45.f}), vstart));
 	vstart = m_vadd(obj->pos, vstart);
 
-	ImDrawList_AddLine(dl, m_rct(wc, vstart), m_rct(wc, tail), col, 2.f);
-	ImDrawList_AddTriangleFilled(dl, m_rct(wc, p1), m_rct(wc, tail), m_rct(wc, p3), col);
+	ImDrawList_AddLine(__dl, m_rct(wc, vstart), m_rct(wc, tail), col, 2.f);
+	ImDrawList_AddTriangleFilled(__dl, m_rct(wc, p1), m_rct(wc, tail), m_rct(wc, p3), col);
 	char buf[100];
 	snprintf(buf, sizeof(buf), "%s: %gN %g°", name, mag, (float)dir * 90.f);
-	ImDrawList_AddText_Vec2(dl, m_rct(wc, ftext), IM_COL32_WHITE, buf, NULL);
+	ImDrawList_AddText_Vec2(__dl, m_rct(wc, ftext), IM_COL32_WHITE, buf, NULL);
 }
 
 static Object g_obj = {.pos = {0.f, 50.f}};
@@ -125,8 +119,6 @@ static void frame(void)
 {
 	FRAME_PASS_BEGIN
 
-	ImGuiIO *io = igGetIO();
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
 	ImVec2 wc = HANDLE_PAN();
 
 	static float mass = 5.f;
@@ -151,7 +143,7 @@ static void frame(void)
 	igCheckbox("Show About", &show_about);
 	igEnd();
 
-	igSetNextWindowPos((ImVec2){io->DisplaySize.x / 2.0f, io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
+	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f, __io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
@@ -175,7 +167,7 @@ static void frame(void)
 	}
 
 	RENDER_GRID(wc);
-	ImDrawList_AddRectFilled(dl, (ImVec2){0.f, io->DisplaySize.y}, (ImVec2){io->DisplaySize.x, wc.y}, IM_COL32(36,36,36, 255), 0.f, 0);
+	ImDrawList_AddRectFilled(__dl, (ImVec2){0.f, __io->DisplaySize.y}, (ImVec2){__io->DisplaySize.x, wc.y}, IM_COL32(36,36,36, 255), 0.f, 0);
 
 	float f_net = 0.f;
 	float static_coefficient_max = static_coefficient * f_normal;

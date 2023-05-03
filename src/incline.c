@@ -85,13 +85,11 @@ static void frame(void)
 {
 	FRAME_PASS_BEGIN
 
-	ImGuiIO *io = igGetIO();
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
 	ImVec2 wc = HANDLE_PAN();
 
 	static float incline_angle_deg = 30.f;
 
-	igSetNextWindowPos((ImVec2){io->DisplaySize.x / 2.0f, io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
+	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f, __io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
@@ -103,9 +101,9 @@ static void frame(void)
 
 	/* const float end_y = tanf(incline_rad) * wc.x;
 	ImVec2 b0 = {0.f, end_y + wc.y};
-	ImVec2 b1 = {io->DisplaySize.x, wc.y - end_y};
-	ImVec2 b2 = {io->DisplaySize.x, io->DisplaySize.y};
-	ImVec2 b3 = {0.f, io->DisplaySize.y};
+	ImVec2 b1 = {__io->DisplaySize.x, wc.y - end_y};
+	ImVec2 b2 = {__io->DisplaySize.x, __io->DisplaySize.y};
+	ImVec2 b3 = {0.f, __io->DisplaySize.y};
 	
 	bool b0_low = b0.y < 0.f;
 	bool b1_low = b1.y < 0.f;
@@ -117,18 +115,18 @@ static void frame(void)
 	if (b0_low) b3 = b0;
 	if (b1_low) b2 = b1; */
 
-	// 0.f, io->DisplaySize.y/2.f, io->DisplaySize.x, io->DisplaySize.y
+	// 0.f, __io->DisplaySize.y/2.f, __io->DisplaySize.x, __io->DisplaySize.y
 
 	/* ImVec2 points[4] = {
 		{0.f, 0.f},
-		{io->DisplaySize.x, 0.f},
-		{io->DisplaySize.x, io->DisplaySize.y},
-		{0.f, io->DisplaySize.y},
+		{__io->DisplaySize.x, 0.f},
+		{__io->DisplaySize.x, __io->DisplaySize.y},
+		{0.f, __io->DisplaySize.y},
 	}; */
 	ImVec2 slice[4];
 	slice_rectangle(wc.x, wc.y, wc.x, wc.y, incline_rad, slice);
 	
-	ImDrawList_AddQuad(dl, slice[0], slice[1], slice[2], slice[3], IM_COL32(255,255,255,255), 2.f);
+	ImDrawList_AddQuad(__dl, slice[0], slice[1], slice[2], slice[3], IM_COL32(255,255,255,255), 2.f);
 
 	const float mid_end_y = tanf(incline_rad) * wc.x;
 	ImVec2 r0 = {-OBJ_HALF_X, 0.f};
@@ -140,7 +138,7 @@ static void frame(void)
 	r2 = m_vrotate(r2, incline_rad);
 	r3 = m_vrotate(r3, incline_rad);
 
-	ImDrawList_AddQuad(dl, m_rct(wc, r0), m_rct(wc, r1), m_rct(wc, r2), m_rct(wc, r3), IM_COL32(255,255,255, 255), 1.f);
+	ImDrawList_AddQuad(__dl, m_rct(wc, r0), m_rct(wc, r1), m_rct(wc, r2), m_rct(wc, r3), IM_COL32(255,255,255, 255), 1.f);
 
 	ABOUT_WIDGET();
 	FRAME_PASS_END

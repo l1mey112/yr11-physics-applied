@@ -54,14 +54,14 @@ static inline float norm_degrees(float a)
 #define RESULTANT_VECTOR_COL_FULL IM_COL32(54, 229, 223, 255)
 #define TIP_END_POINT_COL IM_COL32(255, 255, 255, 40)
 
-static void vector_final(ImDrawList *dl, const ImVec2 world_center)
+static void vector_final(ImDrawList *__dl, const ImVec2 world_center)
 {
 	const Point a = g_points[0];
 	const Point b = g_points[g_points_len - 1];
 
 	ImVec2 deg = {b.pos.x, a.pos.y};
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(deg), RESULTANT_VECTOR_COL, 1.5f);
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(deg), RESULTANT_VECTOR_COL, 1.5f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(deg), RESULTANT_VECTOR_COL, 1.5f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(deg), RESULTANT_VECTOR_COL, 1.5f);
 
 	float dx = b.pos.x - a.pos.x;
 	float dy = b.pos.y - a.pos.y;
@@ -79,23 +79,23 @@ static void vector_final(ImDrawList *dl, const ImVec2 world_center)
 		float hypot = hypotf(dx, dy);
 		
 		snprintf(buf, sizeof(buf), "%g", dx);
-		ImDrawList_AddText_Vec2(dl, TO_REAL_COORDS(t0), RESULTANT_VECTOR_COL_FULL, buf, NULL);
+		ImDrawList_AddText_Vec2(__dl, TO_REAL_COORDS(t0), RESULTANT_VECTOR_COL_FULL, buf, NULL);
 		snprintf(buf, sizeof(buf), "%g", dy);
-		ImDrawList_AddText_Vec2(dl, TO_REAL_COORDS(t1), RESULTANT_VECTOR_COL_FULL, buf, NULL);
+		ImDrawList_AddText_Vec2(__dl, TO_REAL_COORDS(t1), RESULTANT_VECTOR_COL_FULL, buf, NULL);
 		snprintf(buf, sizeof(buf), "%g", hypot);
-		ImDrawList_AddText_Vec2(dl, TO_REAL_COORDS(t2), RESULTANT_VECTOR_COL_FULL, buf, NULL);
+		ImDrawList_AddText_Vec2(__dl, TO_REAL_COORDS(t2), RESULTANT_VECTOR_COL_FULL, buf, NULL);
 	}
 
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(b.pos), RESULTANT_VECTOR_COL, 2.f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(b.pos), RESULTANT_VECTOR_COL, 2.f);
 }
 
-static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const Point a, const Point b)
+static void tip_to_tail_pairs(ImDrawList *__dl, const ImVec2 world_center, const Point a, const Point b)
 {
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(b.pos), a.col, 2.f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(b.pos), a.col, 2.f);
 
 	ImVec2 deg = {b.pos.x, a.pos.y};
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(deg), IM_COL32(255, 255, 255, 70), 1.5f);
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(deg), IM_COL32(255, 255, 255, 70), 1.5f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(deg), IM_COL32(255, 255, 255, 70), 1.5f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(deg), IM_COL32(255, 255, 255, 70), 1.5f);
 
 	float dx = b.pos.x - a.pos.x;
 	float dy = b.pos.y - a.pos.y;
@@ -109,9 +109,9 @@ static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const P
 		char buf[50];
 
 		snprintf(buf, sizeof(buf), "%g", dx);
-		ImDrawList_AddText_Vec2(dl, TO_REAL_COORDS(t0), IM_COL32(255, 255, 255, 255), buf, NULL);
+		ImDrawList_AddText_Vec2(__dl, TO_REAL_COORDS(t0), IM_COL32(255, 255, 255, 255), buf, NULL);
 		snprintf(buf, sizeof(buf), "%g", dy);
-		ImDrawList_AddText_Vec2(dl, TO_REAL_COORDS(t1), IM_COL32(255, 255, 255, 255), buf, NULL);
+		ImDrawList_AddText_Vec2(__dl, TO_REAL_COORDS(t1), IM_COL32(255, 255, 255, 255), buf, NULL);
 	}
 
 	float a0 = 0;
@@ -124,24 +124,24 @@ static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const P
 	if (arc_rad > 40.f)
 		arc_rad = 40.f;
 
-	ImDrawList_PathArcTo(dl, TO_REAL_COORDS(a.pos), arc_rad, a0, a1, 0);
-	ImDrawList_PathStroke(dl, IM_COL32(255, 255, 255, 70), ImDrawFlags_None, 1.5f);
+	ImDrawList_PathArcTo(__dl, TO_REAL_COORDS(a.pos), arc_rad, a0, a1, 0);
+	ImDrawList_PathStroke(__dl, IM_COL32(255, 255, 255, 70), ImDrawFlags_None, 1.5f);
 
 	/* ImVec2 arrw0 = m_vrotate((ImVec2){30.f, 0.f}, a1_r + 45.f * DEG_TO_RAD);
 	ImVec2 arrw1 = m_vrotate((ImVec2){30.f, 0.f}, a1_r - 45.f * DEG_TO_RAD);
 	arrw0 = (ImVec2){a.pos.x + arrw0.x, a.pos.y + arrw0.y};
 	arrw1 = (ImVec2){a.pos.x + arrw1.x, a.pos.y + arrw1.y};
 
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(arrw0), IM_COL32(255, 50, 50, 120), 1.5f);
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(arrw1), IM_COL32(255, 50, 50, 120), 1.5f); */
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(arrw0), IM_COL32(255, 50, 50, 120), 1.5f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(a.pos), TO_REAL_COORDS(arrw1), IM_COL32(255, 50, 50, 120), 1.5f); */
 
 	ImVec2 arrw3 = m_vrotate((ImVec2){40.f, 0.f}, a1_r + 225.f * DEG_TO_RAD);
 	ImVec2 arrw4 = m_vrotate((ImVec2){40.f, 0.f}, a1_r - 225.f * DEG_TO_RAD);
 	arrw3 = (ImVec2){b.pos.x + arrw3.x, b.pos.y + arrw3.y};
 	arrw4 = (ImVec2){b.pos.x + arrw4.x, b.pos.y + arrw4.y};
 
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(arrw3), a.col, 1.5f);
-	ImDrawList_AddLine(dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(arrw4), a.col, 1.5f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(arrw3), a.col, 1.5f);
+	ImDrawList_AddLine(__dl, TO_REAL_COORDS(b.pos), TO_REAL_COORDS(arrw4), a.col, 1.5f);
 
 	if (show_math) {
 		ImVec2 theta_pos = m_vrotate((ImVec2){40.f, 0.f}, a1);
@@ -150,7 +150,7 @@ static void tip_to_tail_pairs(ImDrawList *dl, const ImVec2 world_center, const P
 		char buf[50];
 		snprintf(buf, sizeof(buf), "(%g, %g) N%g°E", a.pos.x, a.pos.y, norm_degrees(a1_r * RAD_TO_DEG));
 
-		ImDrawList_AddText_Vec2(dl, TO_REAL_COORDS(theta_pos), IM_COL32(255, 255, 255, 255), buf, NULL);
+		ImDrawList_AddText_Vec2(__dl, TO_REAL_COORDS(theta_pos), IM_COL32(255, 255, 255, 255), buf, NULL);
 
 		/* {
 			Point last_point = g_points[0];
@@ -174,9 +174,6 @@ static void frame(void)
 {
 	FRAME_PASS_BEGIN
 
-	ImGuiIO *io = igGetIO();
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
-	
 	ImVec2 world_center = HANDLE_PAN();
 	RENDER_GRID(world_center);
 
@@ -200,7 +197,7 @@ static void frame(void)
 	if (igIsMouseDragging(ImGuiMouseButton_Left, 0.f))
 	{
 		if (is_hitting != -1)
-			g_points[is_hitting].pos = TO_RELA_COORDS(io->MousePos);
+			g_points[is_hitting].pos = TO_RELA_COORDS(__io->MousePos);
 	}
 	else
 	{
@@ -213,11 +210,11 @@ static void frame(void)
 	{
 		Point point = g_points[idx];
 		if (is_hovering == idx)
-			ImDrawList_AddCircleFilled(dl, TO_REAL_COORDS(point.pos), POINTS_RAD * 1.1f, IM_COL32(255, 255, 255, 80), 0);
+			ImDrawList_AddCircleFilled(__dl, TO_REAL_COORDS(point.pos), POINTS_RAD * 1.1f, IM_COL32(255, 255, 255, 80), 0);
 		else if (is_hitting == idx || idx + 1 == g_points_len)
-			ImDrawList_AddCircleFilled(dl, TO_REAL_COORDS(point.pos), POINTS_RAD, TIP_END_POINT_COL, 0);
+			ImDrawList_AddCircleFilled(__dl, TO_REAL_COORDS(point.pos), POINTS_RAD, TIP_END_POINT_COL, 0);
 		else
-			ImDrawList_AddCircleFilled(dl, TO_REAL_COORDS(point.pos), POINTS_RAD, point.col, 0);
+			ImDrawList_AddCircleFilled(__dl, TO_REAL_COORDS(point.pos), POINTS_RAD, point.col, 0);
 	}
 
 	ImVec2 rect_pos = g_points[0].pos;
@@ -245,7 +242,7 @@ static void frame(void)
 				ImVec2 b1 = (ImVec2){b.pos.x, rect_pos.y + RECT_OFFSET};
 				b0.y += RECT_OFFSET * 2.f * idx;
 				b1.y += RECT_OFFSET * 2.f * idx;
-				ImDrawList_AddRectFilled(dl, TO_REAL_COORDS(b0), TO_REAL_COORDS(b1), a.col, 0.f, 0);
+				ImDrawList_AddRectFilled(__dl, TO_REAL_COORDS(b0), TO_REAL_COORDS(b1), a.col, 0.f, 0);
 			}
 			
 			{
@@ -253,7 +250,7 @@ static void frame(void)
 				ImVec2 b1 = (ImVec2){rect_pos.x + RECT_OFFSET, b.pos.y};
 				b0.x += RECT_OFFSET * 2.f * idx;
 				b1.x += RECT_OFFSET * 2.f * idx;
-				ImDrawList_AddRectFilled(dl, TO_REAL_COORDS(b0), TO_REAL_COORDS(b1), a.col, 0.f, 0);
+				ImDrawList_AddRectFilled(__dl, TO_REAL_COORDS(b0), TO_REAL_COORDS(b1), a.col, 0.f, 0);
 			}
 			
 			/* ImVec2 b0 = (ImVec2){a.pos.x, rect_pos.y};
@@ -262,15 +259,15 @@ static void frame(void)
 			b0.y += RECT_OFFSET * 2.f * idx;
 			b1.y += RECT_OFFSET * 2.f * idx;
 			b2.y += RECT_OFFSET * 2.f * idx;
-			// ImDrawList_AddRectFilled(dl, TO_REAL_COORDS(b0), TO_REAL_COORDS(b1), a.col, 0.f, 0);
-			ImDrawList_AddTriangleFilled(dl, TO_REAL_COORDS(b0), TO_REAL_COORDS(b1), TO_REAL_COORDS(b2), a.col); */
+			// ImDrawList_AddRectFilled(__dl, TO_REAL_COORDS(b0), TO_REAL_COORDS(b1), a.col, 0.f, 0);
+			ImDrawList_AddTriangleFilled(__dl, TO_REAL_COORDS(b0), TO_REAL_COORDS(b1), TO_REAL_COORDS(b2), a.col); */
 			
-			tip_to_tail_pairs(dl, world_center, a, b);
+			tip_to_tail_pairs(__dl, world_center, a, b);
 			a = b;
 		}
 	}
 
-	vector_final(dl, world_center);
+	vector_final(__dl, world_center);
 
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);

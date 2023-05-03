@@ -120,6 +120,9 @@ EM_JS(bool, is_inside_iframe, (), {
 
 // SOKOL
 
+static ImDrawList *__dl;
+static ImGuiIO *__io;
+
 static struct
 {
 	sg_pass_action pass_action;
@@ -173,7 +176,9 @@ sapp_desc sokol_main(int argc, char *argv[])
 		.height = sapp_height(), \
 		.delta_time = sapp_frame_duration(), \
 		.dpi_scale = sapp_dpi_scale(), \
-	});
+	}); \
+	__dl = igGetBackgroundDrawList_Nil(); \
+	__io = igGetIO();
 
 #define FRAME_PASS_END \
 	sg_begin_default_pass(&state.pass_action, sapp_width(), sapp_height()); \
@@ -215,47 +220,49 @@ static void ABOUT_WIDGET() {
 	igEnd();
 }
 
-static void RENDER_GRID(ImVec2 world_center) {
-	ImGuiIO *io = igGetIO();
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
-
-	ImVec2 canvas_sz = io->DisplaySize;
+static void BLIT_BG(ImU32 col) {
+	ImVec2 canvas_sz = __io->DisplaySize;
 	ImVec2 canvas_p0 = {0.f, 0.f};
 	ImVec2 canvas_p1 = {canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y};
 
-	ImDrawList_AddRectFilled(dl, canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255), 0.f, 0);
+	ImDrawList_AddRectFilled(__dl, canvas_p0, canvas_p1, col, 0.f, 0);
+}
+
+static void RENDER_GRID(ImVec2 world_center) {
+	ImVec2 canvas_sz = __io->DisplaySize;
+	ImVec2 canvas_p0 = {0.f, 0.f};
+	ImVec2 canvas_p1 = {canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y};
+
+	BLIT_BG(IM_COL32(50, 50, 50, 255));
 	
 	const float GRID_STEP = 100.0f;
 	for (float x = fmodf(world_center.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
 	{
 		if (x == world_center.x)
-			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x + x, canvas_p0.y}, (ImVec2){canvas_p0.x + x, canvas_p1.y}, IM_COL32(255, 255, 255, 100), 1.0f);
+			ImDrawList_AddLine(__dl, (ImVec2){canvas_p0.x + x, canvas_p0.y}, (ImVec2){canvas_p0.x + x, canvas_p1.y}, IM_COL32(255, 255, 255, 100), 1.0f);
 		else
-			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x + x, canvas_p0.y}, (ImVec2){canvas_p0.x + x, canvas_p1.y}, IM_COL32(200, 200, 200, 40), 1.0f);
+			ImDrawList_AddLine(__dl, (ImVec2){canvas_p0.x + x, canvas_p0.y}, (ImVec2){canvas_p0.x + x, canvas_p1.y}, IM_COL32(200, 200, 200, 40), 1.0f);
 	}
 	for (float y = fmodf(world_center.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
 	{
 		if (y == world_center.y)
-			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(255, 255, 255, 100), 1.0f);
+			ImDrawList_AddLine(__dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(255, 255, 255, 100), 1.0f);
 		else
-			ImDrawList_AddLine(dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(200, 200, 200, 40), 1.0f);
+			ImDrawList_AddLine(__dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(200, 200, 200, 40), 1.0f);
 	}
 }
 
 static ImVec2 HANDLE_PAN() {
-	ImGuiIO *io = igGetIO();
-	ImDrawList *dl = igGetBackgroundDrawList_Nil();
-
-	ImVec2 canvas_sz = io->DisplaySize;
+	ImVec2 canvas_sz = __io->DisplaySize;
 
 	static ImVec2 delta_scroll = {0.f, 0.f};
 	if (igIsMouseDragging(ImGuiMouseButton_Right, 0.f))
 	{
 		#ifndef HANDLE_PAN_NO_X
-		delta_scroll.x += io->MouseDelta.x;
+		delta_scroll.x += __io->MouseDelta.x;
 		#endif
 		#ifndef HANDLE_PAN_NO_Y
-		delta_scroll.y += io->MouseDelta.y;
+		delta_scroll.y += __io->MouseDelta.y;
 		#endif
 	}
 	ImVec2 world_center = {delta_scroll.x + canvas_sz.x / 2.0f, delta_scroll.y + canvas_sz.y / 2.0f};
