@@ -34,7 +34,7 @@ typedef struct World World;
 struct Object {
 	ImVec2 pos;
 	ImVec2 vel;
-	ImVec2 acc;
+	// ImVec2 acc;
 	float mass;
 	float rad;
 };
@@ -93,7 +93,7 @@ void world_integrate_collision(Object *obj1, Object *obj2) {
 	// 0.0: completely inelastic collision
 	// 1.0: completely elastic collision
 	// float e = (1.f + 1.f) / 2.f;	
-	float e = 0.f;
+	float e = 1.f;
 
 	// implulse scalar
 	float j = -(1.f + e) * v_mag_normal;
@@ -111,13 +111,13 @@ void world_integrate_collision(Object *obj1, Object *obj2) {
 
 void world_integrate(float dt)
 {
-	for (int i = 0; i < __world.obj_count; i++) {
+	/* for (int i = 0; i < __world.obj_count; i++) {
 		Object *obj = &__world.objects[i];
 
 		// semi-implicit euler
-		obj->vel.x += obj->acc.x * dt;
-		obj->vel.y += obj->acc.y * dt;
-	}
+		// obj->vel.x += obj->acc.x * dt;
+		// obj->vel.y += obj->acc.y * dt;
+	} */
 
 	for (int i = 0; i < __world.obj_count; i++) {
         for (int j = i + 1; j < __world.obj_count; j++) {
@@ -135,8 +135,8 @@ void world_integrate(float dt)
 		// semi-implicit euler
 		obj->pos.x += obj->vel.x * dt;
 		obj->pos.y += obj->vel.y * dt;
-		/* obj->acc.x = 0.f;
-		obj->acc.y = 0.f; */
+		// obj->acc.x = 0.f;
+		// obj->acc.y = 0.f;
 	}
 }
 

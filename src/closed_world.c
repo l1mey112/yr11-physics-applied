@@ -32,7 +32,7 @@ static void init2(void)
 	world_add_object(V2ZERO, 100.f, 100.f);
 	obj = &__world.objects[world_add_object(V2ZERO, 100.f, 100.f)];
 	obj->pos.y = 350.f;
-	obj->vel.y = -100.f;
+	//obj->vel.y = -100.f;
 }
 
 static void frame(void)
@@ -66,6 +66,26 @@ static void frame(void)
 	for (int i = 0; i < __world.obj_count; i++) {
 		Object *obj = &__world.objects[i];
 		ImDrawList_AddCircleFilled(__dl, m_rct(wc, obj->pos), obj->rad, IM_COL32(255, 255, 255, 255), 0);
+	}
+
+	//if (if __io->MouseClicked[0])
+
+	static bool init_drag = false;
+	static ImVec2 drag_start;
+	static ImVec2 drag_delta;
+	if (igIsMouseDragging(ImGuiMouseButton_Left, 0.f)) {
+		if (!init_drag) {
+			// DRAG START
+			drag_start = __io->MouseClickedPos[ImGuiMouseButton_Left];
+		}
+		init_drag =  true;
+		igGetMouseDragDelta(&drag_delta, ImGuiMouseButton_Left, 0.f);
+
+		// DRAGGING
+	} else if (init_drag) {
+		init_drag = false;
+		igText("DRAGGING: (%f, %f), delta (%f, %f)", drag_start.x, drag_start.y, drag_delta.x, drag_delta.y);
+		// END DRAG		
 	}
 
 	if (show_about) {
