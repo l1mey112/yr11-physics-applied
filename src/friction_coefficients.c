@@ -110,9 +110,6 @@ static void object_force_side(ImVec2 wc, Object *obj, int dir, float mag, ImU32 
 
 static Object g_obj = {.pos = {0.f, 50.f}};
 
-#define F_COLOUR IM_COL32(240, 100, 100, 255)
-#define F_META_COLOUR IM_COL32(100, 120, 255, 255)
-
 static bool show_about = true;
 
 static void frame(void)

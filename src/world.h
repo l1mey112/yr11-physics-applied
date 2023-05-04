@@ -86,8 +86,8 @@ void world_integrate_collision(Object *obj1, Object *obj2) {
 
 	// moving away from eachother
 	// TODO: assert false?
-	if (v_mag_normal > 0.f)
-		return;
+	/* if (v_mag_normal > 0.f)
+		return; */
 
 	// obj1->coeff + obj2->coeff
 	// 0.0: completely inelastic collision
@@ -107,6 +107,17 @@ void world_integrate_collision(Object *obj1, Object *obj2) {
     obj1->vel.y += 1.0f / obj1->mass * yimp;
     obj2->vel.x -= 1.0f / obj2->mass * ximp;
     obj2->vel.y -= 1.0f / obj2->mass * yimp;
+
+	float overlap = obj1->rad + obj2->rad - dist;
+	if (overlap >= 0.f) {
+		float ov_x = overlap * nx / 2.f;
+        float ov_y = overlap * ny / 2.f;
+
+		obj1->pos.x += ov_x;
+		obj1->pos.y += ov_y;
+		obj2->pos.x -= ov_x;
+		obj2->pos.y -= ov_y;
+	}
 }
 
 void world_integrate(float dt)
@@ -124,10 +135,20 @@ void world_integrate(float dt)
             Object* obj1 = &__world.objects[i];
             Object* obj2 = &__world.objects[j];
 
-            igText("(integrate!)");
 			world_integrate_collision(obj1, obj2);
         }
     }
+
+	/* for (int i = 0; i < __world.obj_count; i++) {
+        for (int j = 0; j < __world.obj_count; j++) {
+			if (i != j) {
+				Object* obj1 = &__world.objects[i];
+            	Object* obj2 = &__world.objects[j];
+
+				world_integrate_collision(obj1, obj2);
+			}
+        }
+    } */
 
 	for (int i = 0; i < __world.obj_count; i++) {
 		Object *obj = &__world.objects[i];

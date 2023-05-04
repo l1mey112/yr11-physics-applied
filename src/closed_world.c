@@ -25,13 +25,13 @@
 
 static bool show_about = true;
 
-Object *obj;
+// Object *obj;
 
 static void init2(void)
 {
 	world_add_object(V2ZERO, 100.f, 100.f);
-	obj = &__world.objects[world_add_object(V2ZERO, 100.f, 100.f)];
-	obj->pos.y = 350.f;
+	/* obj = &__world.objects[world_add_object(V2ZERO, 100.f, 100.f)];
+	obj->pos.y = 350.f; */
 	//obj->vel.y = -100.f;
 }
 
@@ -58,8 +58,6 @@ static void frame(void)
 		acc -= phys_dt;
 	}
 
-	igText("(%f %f)", obj->vel.x, obj->vel.y);
-
 	BLIT_BG(IM_COL32(50, 50, 50, 255));
 	//RENDER_GRID(wc);
 
@@ -68,24 +66,39 @@ static void frame(void)
 		ImDrawList_AddCircleFilled(__dl, m_rct(wc, obj->pos), obj->rad, IM_COL32(255, 255, 255, 255), 0);
 	}
 
-	//if (if __io->MouseClicked[0])
-
 	static bool init_drag = false;
 	static ImVec2 drag_start;
 	static ImVec2 drag_delta;
-	if (igIsMouseDragging(ImGuiMouseButton_Left, 0.f)) {
+	static float sz = 80.f; // default
+	if (igIsMouseDragging(ImGuiMouseButton_Left, 10.f) && !__io->WantCaptureMouse) {
 		if (!init_drag) {
 			// DRAG START
 			drag_start = __io->MouseClickedPos[ImGuiMouseButton_Left];
 		}
 		init_drag =  true;
 		igGetMouseDragDelta(&drag_delta, ImGuiMouseButton_Left, 0.f);
-
 		// DRAGGING
+
+		sz += __io->MouseWheel * 1.f;
+		if (sz < 15.f) sz = 15.f;
+
+		ImDrawList_AddCircle(__dl, drag_start, sz, IM_COL32(255, 255, 255, 80), 0, 0.f);
+		ImDrawList_AddLine(__dl, drag_start, m_vadd(drag_start, drag_delta), F_COLOUR, 0.f);
+		ImDrawList_AddCircleFilled(__dl, drag_start, 8.f, F_COLOUR, 0);
 	} else if (init_drag) {
 		init_drag = false;
-		igText("DRAGGING: (%f, %f), delta (%f, %f)", drag_start.x, drag_start.y, drag_delta.x, drag_delta.y);
-		// END DRAG		
+		// END DRAG
+
+		float dx = -drag_delta.x;
+		float dy = drag_delta.y;
+
+		int idx = world_add_object(m_ract(wc, drag_start), sz, sz);
+		Object *obj = &__world.objects[idx];
+		obj->vel.x = dx;
+		obj->vel.y = dy;
+
+		// float rad = sqrt(drag_delta.x * drag_delta.x + drag_delta.y * drag_delta.y);
+		// ImDrawList_AddCircleFilled(__dl, drag_start, rad, IM_COL32(255, 255, 255, 255), 0);
 	}
 
 	if (show_about) {

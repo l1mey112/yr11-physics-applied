@@ -39,6 +39,9 @@
 
 #define V2ZERO (ImVec2){0.f, 0.f}
 
+#define F_COLOUR IM_COL32(240, 100, 100, 255)
+#define F_META_COLOUR IM_COL32(100, 120, 255, 255)
+
 #define TO_REAL_COORDS(vec) \
 	m_vadd(m_real_coords(vec), world_center)
 #define TO_RELA_COORDS(vec) \
@@ -72,6 +75,11 @@ static inline ImVec2 m_vmuls(ImVec2 a, float b)
 static inline ImVec2 m_rct(ImVec2 world_center, ImVec2 a)
 {
 	return m_vadd(m_real_coords(a), world_center);
+}
+
+static inline ImVec2 m_ract(ImVec2 world_center, ImVec2 vec)
+{
+	return (ImVec2) { vec.x - world_center.x, -(vec.y - world_center.y) };
 }
 
 static ImVec2 m_vrotate(ImVec2 v, float theta)
