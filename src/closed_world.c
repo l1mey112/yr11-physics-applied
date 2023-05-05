@@ -61,16 +61,14 @@ static void frame(void)
 	BLIT_BG(IM_COL32(50, 50, 50, 255));
 	//RENDER_GRID(wc);
 
-	for (int i = 0; i < __world.obj_count; i++) {
-		Object *obj = &__world.objects[i];
-		ImDrawList_AddCircleFilled(__dl, m_rct(wc, obj->pos), obj->rad, IM_COL32(255, 255, 255, 255), 0);
-	}
+	//igShowMetricsWindow(false);
+	//igShowDemoWindow(false);
 
 	static bool init_drag = false;
 	static ImVec2 drag_start;
 	static ImVec2 drag_delta;
 	static float sz = 80.f; // default
-	if (igIsMouseDragging(ImGuiMouseButton_Left, 10.f) && !__io->WantCaptureMouse) {
+	if (igIsMouseDragging(ImGuiMouseButton_Left, 15.f) && !__io->WantCaptureMouse) {
 		if (!init_drag) {
 			// DRAG START
 			drag_start = __io->MouseClickedPos[ImGuiMouseButton_Left];
@@ -79,12 +77,9 @@ static void frame(void)
 		igGetMouseDragDelta(&drag_delta, ImGuiMouseButton_Left, 0.f);
 		// DRAGGING
 
-		sz += __io->MouseWheel * 1.f;
-		if (sz < 15.f) sz = 15.f;
-
 		ImDrawList_AddCircle(__dl, drag_start, sz, IM_COL32(255, 255, 255, 80), 0, 0.f);
-		ImDrawList_AddLine(__dl, drag_start, m_vadd(drag_start, drag_delta), F_COLOUR, 0.f);
 		ImDrawList_AddCircleFilled(__dl, drag_start, 8.f, F_COLOUR, 0);
+		ImDrawList_AddLine(__dl, drag_start, m_vadd(drag_start, drag_delta), F_COLOUR, 0.f);
 	} else if (init_drag) {
 		init_drag = false;
 		// END DRAG
@@ -99,6 +94,41 @@ static void frame(void)
 
 		// float rad = sqrt(drag_delta.x * drag_delta.x + drag_delta.y * drag_delta.y);
 		// ImDrawList_AddCircleFilled(__dl, drag_start, rad, IM_COL32(255, 255, 255, 255), 0);
+	} else {
+		ImDrawList_AddCircle(__dl, __io->MousePos, sz, IM_COL32(255, 255, 255, 80), 0, 0.f);
+		ImDrawList_AddCircleFilled(__dl, __io->MousePos, 8.f, F_COLOUR, 0);
+
+		if (igIsMouseReleased_Nil(ImGuiMouseButton_Left))
+			world_add_object(m_ract(wc, __io->MousePos), sz, sz);
+	}
+
+	if (igIsKeyPressed_Bool(ImGuiKey_UpArrow, true))
+			sz += 20.f;
+	else if (igIsKeyPressed_Bool(ImGuiKey_DownArrow, true))
+		sz -= 20.f;
+	else if (__io->MouseWheel)
+		sz += __io->MouseWheel;
+	if (sz < 15.f) sz = 15.f;
+
+	float mx = 0.f;
+	float my = 0.f;
+	float kx = 0.f;
+	float ky = 0.f;
+	for (int i = 0; i < __world.obj_count; i++) {
+		Object* obj = &__world.objects[i];
+
+		mx += obj->mass * obj->vel.x;
+		my += obj->mass * obj->vel.y;
+		kx += 0.5 * obj->mass * (obj->vel.x * obj->vel.x);
+		ky += 0.5 * obj->mass * (obj->vel.y * obj->vel.y);
+	}
+
+	igText("(%f, %f), %f", mx, my, sqrt(mx * mx + my * my));
+	igText("(%f, %f), %f", kx, ky, sqrt(kx * kx + ky * ky));
+
+	for (int i = 0; i < __world.obj_count; i++) {
+		Object *obj = &__world.objects[i];
+		ImDrawList_AddCircleFilled(__dl, m_rct(wc, obj->pos), obj->rad, IM_COL32(255, 255, 255, 255), 0);
 	}
 
 	if (show_about) {

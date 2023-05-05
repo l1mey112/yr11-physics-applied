@@ -55,20 +55,27 @@ int world_add_object(ImVec2 pos, float mass, float rad)
 	obj.mass = mass;
 	obj.rad = rad;
 
-	int idx = __world.obj_count++;
+	if (__world.obj_count > 0) {
+		Object *last = __world.objects[__world.obj_count - 1];
+		if (last->pos.x == pos.x && last->pos.y == pos.y)
+			return -1;
+	}
+
+	int idx = __world.obj_count;
 	__world.objects[idx] = obj;
+	__world.obj_count++;
 
 	return idx;
 }
 
 void world_integrate_collision(Object *obj1, Object *obj2) {
 	float dx = obj1->pos.x - obj2->pos.x;
-    float dy = obj1->pos.y - obj2->pos.y;
-    float dist_squared = dx * dx + dy * dy;
+	float dy = obj1->pos.y - obj2->pos.y;
+	float dist_squared = dx * dx + dy * dy;
 
-    float sum_radii_squared = (obj1->rad + obj2->rad) * (obj1->rad + obj2->rad);
+	float sum_radii_squared = (obj1->rad + obj2->rad) * (obj1->rad + obj2->rad);
 
-    bool is_colliding = dist_squared < sum_radii_squared;
+	bool is_colliding = dist_squared < sum_radii_squared;
 
 	if (!is_colliding)
 		return;
@@ -104,14 +111,14 @@ void world_integrate_collision(Object *obj1, Object *obj2) {
 
 	// apply impulse, a = F / m
 	obj1->vel.x += 1.0f / obj1->mass * ximp;
-    obj1->vel.y += 1.0f / obj1->mass * yimp;
-    obj2->vel.x -= 1.0f / obj2->mass * ximp;
-    obj2->vel.y -= 1.0f / obj2->mass * yimp;
+	obj1->vel.y += 1.0f / obj1->mass * yimp;
+	obj2->vel.x -= 1.0f / obj2->mass * ximp;
+	obj2->vel.y -= 1.0f / obj2->mass * yimp;
 
 	float overlap = obj1->rad + obj2->rad - dist;
-	if (overlap >= 0.f) {
+	if (overlap > 0.f) {
 		float ov_x = overlap * nx / 2.f;
-        float ov_y = overlap * ny / 2.f;
+		float ov_y = overlap * ny / 2.f;
 
 		obj1->pos.x += ov_x;
 		obj1->pos.y += ov_y;
@@ -131,24 +138,13 @@ void world_integrate(float dt)
 	} */
 
 	for (int i = 0; i < __world.obj_count; i++) {
-        for (int j = i + 1; j < __world.obj_count; j++) {
-            Object* obj1 = &__world.objects[i];
-            Object* obj2 = &__world.objects[j];
+		for (int j = i + 1; j < __world.obj_count; j++) {
+			Object* obj1 = &__world.objects[i];
+			Object* obj2 = &__world.objects[j];
 
 			world_integrate_collision(obj1, obj2);
-        }
-    }
-
-	/* for (int i = 0; i < __world.obj_count; i++) {
-        for (int j = 0; j < __world.obj_count; j++) {
-			if (i != j) {
-				Object* obj1 = &__world.objects[i];
-            	Object* obj2 = &__world.objects[j];
-
-				world_integrate_collision(obj1, obj2);
-			}
-        }
-    } */
+		}
+	}
 
 	for (int i = 0; i < __world.obj_count; i++) {
 		Object *obj = &__world.objects[i];
