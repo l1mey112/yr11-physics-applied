@@ -34,6 +34,7 @@
 #include "HandmadeMath.h"
 #include <emscripten.h>
 
+#define M_TAU (2 * M_PI)
 #define DEG_TO_RAD (M_PI / 180.f)
 #define RAD_TO_DEG (180.f / M_PI)
 
@@ -267,23 +268,27 @@ static void RENDER_GRID(ImVec2 world_center) {
 			ImDrawList_AddLine(__dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(200, 200, 200, 40), 1.0f);
 	}
 }
+static ImVec2 __delta_scroll = {0.f, 0.f};
 
 static ImVec2 HANDLE_PAN() {
 	ImVec2 canvas_sz = __io->DisplaySize;
 
-	static ImVec2 delta_scroll = {0.f, 0.f};
 	if (igIsMouseDragging(ImGuiMouseButton_Right, 0.f))
 	{
 		#ifndef HANDLE_PAN_NO_X
-		delta_scroll.x += __io->MouseDelta.x;
+		__delta_scroll.x += __io->MouseDelta.x;
 		#endif
 		#ifndef HANDLE_PAN_NO_Y
-		delta_scroll.y += __io->MouseDelta.y;
+		__delta_scroll.y += __io->MouseDelta.y;
 		#endif
 	}
-	ImVec2 world_center = {delta_scroll.x + canvas_sz.x / 2.0f, delta_scroll.y + canvas_sz.y / 2.0f};
+	ImVec2 world_center = {__delta_scroll.x + canvas_sz.x / 2.0f, __delta_scroll.y + canvas_sz.y / 2.0f};
 
 	return world_center;
+}
+
+static inline ImVec2 DELTA_SCROLL() {
+	return __delta_scroll;
 }
 
 #endif // DEMOS_H

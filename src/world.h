@@ -56,7 +56,7 @@ int world_add_object(ImVec2 pos, float mass, float rad)
 	obj.rad = rad;
 
 	if (__world.obj_count > 0) {
-		Object *last = __world.objects[__world.obj_count - 1];
+		Object *last = &__world.objects[__world.obj_count - 1];
 		if (last->pos.x == pos.x && last->pos.y == pos.y)
 			return -1;
 	}
