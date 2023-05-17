@@ -68,7 +68,7 @@ static void frame(void)
 	static ImVec2 drag_start;
 	static ImVec2 drag_delta;
 	static float sz = 80.f; // default
-	if (igIsMouseDragging(ImGuiMouseButton_Left, 15.f) && !__io->WantCaptureMouse) {
+	if (igIsMouseDragging(ImGuiMouseButton_Left, 10.f) && !__io->WantCaptureMouse) {
 		if (!init_drag) {
 			// DRAG START
 			drag_start = __io->MouseClickedPos[ImGuiMouseButton_Left];
@@ -84,22 +84,27 @@ static void frame(void)
 		init_drag = false;
 		// END DRAG
 
-		float dx = -drag_delta.x;
-		float dy = drag_delta.y;
-
 		int idx = world_add_object(m_ract(wc, drag_start), sz, sz);
 		Object *obj = &__world.objects[idx];
-		obj->vel.x = dx;
-		obj->vel.y = dy;
+
+		float dx = 1.0f / obj->mass * -drag_delta.x;
+		float dy = 1.0f / obj->mass * drag_delta.y;
+
+		obj->vel.x = dx * 100.f;
+		obj->vel.y = dy * 100.f;
 
 		// float rad = sqrt(drag_delta.x * drag_delta.x + drag_delta.y * drag_delta.y);
 		// ImDrawList_AddCircleFilled(__dl, drag_start, rad, IM_COL32(255, 255, 255, 255), 0);
-	} else {
-		ImDrawList_AddCircle(__dl, __io->MousePos, sz, IM_COL32(255, 255, 255, 80), 0, 0.f);
-		ImDrawList_AddCircleFilled(__dl, __io->MousePos, 8.f, F_COLOUR, 0);
+	} else if (!__io->WantCaptureMouse) {
+		ImVec2 dp = __io->MousePos;
 
 		if (igIsMouseReleased_Nil(ImGuiMouseButton_Left))
 			world_add_object(m_ract(wc, __io->MousePos), sz, sz);
+		//else if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, true))
+		//	dp = __io->MouseClickedPos[ImGuiMouseButton_Left];
+
+		ImDrawList_AddCircle(__dl, dp, sz, IM_COL32(255, 255, 255, 80), 0, 0.f);
+		ImDrawList_AddCircleFilled(__dl, dp, 8.f, F_COLOUR, 0);
 	}
 
 	if (igIsKeyPressed_Bool(ImGuiKey_UpArrow, true))
@@ -108,6 +113,7 @@ static void frame(void)
 		sz -= 20.f;
 	else if (__io->MouseWheel)
 		sz += __io->MouseWheel;
+	
 	if (sz < 15.f) sz = 15.f;
 
 	float mx = 0.f;
