@@ -57,6 +57,7 @@ static ImVec2 wave_point(ImVec2 wc, float y_diff, float x_pos, float amplitude, 
 }
 
 #define VEC_RED (IM_COL32(255, 6, 0, 255))
+#define VEC_RED_A (IM_COL32(255, 6, 0, 100))
 
 static void frame(void)
 {
@@ -73,13 +74,15 @@ static void frame(void)
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
 
-	static float speed = 300.f;
+	static float speed = 200.f;
 	static float amplitude = 200.f;
-	static float frequency = 1.f;
+	static float frequency = 0.6f;
+
+	static bool freeze = false;
 
 	float wavelength = speed / frequency;
 
-	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f, __io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
+	//igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f, __io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
@@ -94,30 +97,36 @@ static void frame(void)
 	}
 	igSeparator();
 	{
+		igCheckbox("Freeze", &freeze);
 		// igText("speed: %g", wavelength * frequency);
 	}
 	igEnd();
 
 	static float f_diff = 0.f;
-	f_diff += __io->DeltaTime * speed;
-
 	ImVec2 ds = DELTA_SCROLL();
-
-	// float wavelength2 = wavelength;
-	// if (f_diff > wavelength2) {
-	// 	f_diff -= wavelength2;
-	// }
+	
+	if (freeze) {
+		f_diff = 0.f;
+	} else {
+		f_diff += __io->DeltaTime * speed;
+		/* float wavelength2 = wavelength * 2.f;
+		if (f_diff > wavelength2 && fmodf(f_diff, wavelength2) < __FLT_EPSILON__) {
+			igText("run!!");
+			f_diff -= wavelength2;
+		} */
+	}
+	
 
 	const float interval = 2.f;
 
 	render_wave(wc, f_diff, 0.f, __io->DisplaySize.x, interval, IM_COL32(255, 255, 255, 255), 1.f, amplitude, wavelength, frequency);
 
 	float hw = __io->DisplaySize.x / 2.f + ds.x;
-	float hh = __io->DisplaySize.x / 2.f + ds.y;
+	float hh = __io->DisplaySize.y / 2.f + ds.y;
 	float p1 = hw;
 	float p2 = hw + wavelength;
 
-	render_wave(wc, f_diff, hw, hw + wavelength, interval, IM_COL32(255, 6, 0, 255), 2.f, amplitude, wavelength, frequency);
+	render_wave(wc, f_diff, hw, hw + wavelength, interval, IM_COL32(255, 6, 0, 255), 3.f, amplitude, wavelength, frequency);
 
 	ImVec2 p1_v = wave_point(wc, f_diff, p1, amplitude, wavelength, frequency);
 	ImVec2 p2_v = wave_point(wc, f_diff, p2, amplitude, wavelength, frequency);
@@ -125,10 +134,14 @@ static void frame(void)
 	ImDrawList_AddCircleFilled(__dl, p1_v, 6.f, VEC_RED, 0);
 	ImDrawList_AddCircleFilled(__dl, p2_v, 6.f, VEC_RED, 0);
 
-	ImVec2 b1_v = {p1_v.x, hh - (amplitude + 100.f)};
-	ImVec2 b2_v = {p2_v.x, hh - (amplitude + 100.f)};
+	ImVec2 b1_v = {p1_v.x, hh - (amplitude + 30.f)};
+	ImVec2 b2_v = {p2_v.x, hh - (amplitude + 30.f)};
 
-	ImDrawList_AddLine(__dl, b1_v, b2_v, VEC_RED, 1.5f);
+	ImDrawList_AddLine(__dl, b1_v, b2_v, VEC_RED, 2.5f);
+	ImDrawList_AddLine(__dl, p1_v, b1_v, VEC_RED, 2.5f);
+	ImDrawList_AddLine(__dl, p2_v, b2_v, VEC_RED, 2.5f);
+
+	ImDrawList_AddCircleFilled(__dl, b2_v, 10.f, IM_COL32(255, 255, 255, 255), 0);
 
 	if (show_about) {
 		ABOUT_WIDGET();
