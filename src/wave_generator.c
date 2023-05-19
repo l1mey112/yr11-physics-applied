@@ -88,19 +88,22 @@ static void frame(void)
 	igBegin("Hello Dear ImGui!", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
 		igTextWrapped("Welcome to the Sinusoidal Wave Simulation!");
-		igTextWrapped("This simulation allows you to visualize a sinusoidal wave in real-time.");
+		igTextWrapped("This simulation allows you to visualise a sinusoidal wave in real-time.");
 		igSeparator();
 		igTextWrapped("Amplitude (A): Determines the maximum displacement of the wave from its equilibrium position.");
 		igSeparator();
 		igTextWrapped("Frequency (f): Represents the number of complete cycles the wave completes in one second.");
 		igSeparator();
 		igTextWrapped("Wave Velocity (v): Determines how fast the wave propagates through the medium.");
-
-		// igTextWrapped("Adjust the following parameters to control the wave characteristics:");
-		// igTextWrapped("Key Concepts:");
+		igSeparator();
+		igTextWrapped("The Wavelength (lambda) is computed by dividing it's wave velocity by it's frequency.");
+		igTextWrapped("Assuming a wave moving at a fixed speed, the wavelength is inversely proportional to frequency of the wave.");
 		igSeparator();
 		igCheckbox("Show About", &show_about);
+		igSameLine(0.f, 10.f);
 		igCheckbox("Show Arrows", &show_arrows);
+		igSameLine(0.f, 10.f);
+		igCheckbox("Freeze Wave", &freeze);
 	}
 	igEnd();
 
@@ -113,6 +116,8 @@ static void frame(void)
 
 	float wavelength = speed / frequency;
 
+	static char buf[128];
+
 	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f + 100.f, __io->DisplaySize.y / 2.0f + 100.f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
@@ -120,11 +125,12 @@ static void frame(void)
 	{
 		igSliderFloat("Amplitude (A)", &amplitude, 10.f, 1000.f, "%g m", ImGuiSliderFlags_AlwaysClamp);
 		igSliderFloat("Frequency (f)", &frequency, 0.05f, 2.f, "%g Hz", ImGuiSliderFlags_AlwaysClamp);
-		igSliderFloat("Wave Velocity (m/s)", &speed, 100.f, 1000.f, "%g m/s", ImGuiSliderFlags_AlwaysClamp);
+		igSliderFloat("Wave Velocity (v)", &speed, 100.f, 1000.f, "%g m/s", ImGuiSliderFlags_AlwaysClamp);
+		// ImDrawList_AddText_Vec2(__dl, m_offset(ap1, 20.f, -20.f), IM_COL32_WHITE, buf, NULL);
 	}
 	igSeparator();
 	{
-		igCheckbox("Freeze Wave", &freeze);
+		igText("Wave Period: %8gs | Wavelength: %8gm", 1.f / frequency, wavelength);
 	}
 	igEnd();
 
@@ -169,8 +175,6 @@ static void frame(void)
 
 	if (show_arrows)
 	{
-		static char buf[128];
-
 		snprintf(buf, sizeof(buf), "Amplitude (A): %gm", amplitude);
 		ImDrawList_AddText_Vec2(__dl, m_offset(ap1, 20.f, -20.f), IM_COL32_WHITE, buf, NULL);
 

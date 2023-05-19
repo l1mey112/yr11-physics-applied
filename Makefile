@@ -1,4 +1,4 @@
-DEMOS_SRC = $(wildcard src/*.c)
+DEMOS_SRC = $(filter-out $(shell cat src/ignore.txt), $(wildcard src/*.c))
 DEMOS = $(patsubst src/%.c, public/%.html, $(DEMOS_SRC))
 DEMOS_URLS = $(patsubst public/%.html, /%.html, $(DEMOS))
 

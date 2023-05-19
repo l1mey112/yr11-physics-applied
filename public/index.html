@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>Year 11 Physics, Applied.</title>
-	<link rel="stylesheet" href="/physics-applied/main.css">
+	<link rel="stylesheet" href="main.css">
 	<meta name="description" content="A collection of interactive demonstrations and physics simulations.">
 	<!-- KaTex -->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
@@ -27,7 +27,7 @@
 		<p>Want something else to read? Check out my blog at <i><a href="https://l-m.dev/">l-m.dev.</a></i></p>
 	</article>
 	<article>
-		<h2><a href="/physics-applied/vector_addition.html">Vector Addition</a> --- "Tip To Tail"</h3>
+		<h2><a href="vector_addition.html">Vector Addition, Tip To Tail</a></h2>
 		<p class="meta">Mar 25, 2023</p>
 		<p>To sum two vectors, use trigonometry to find the $x$ and $y$ components of each vector.</p>
 		$$
@@ -38,12 +38,12 @@
 		\end{align*}
 		$$
 		<div class="ifc">
-			<iframe loading=lazy src="/physics-applied/vector_addition.html" frameborder="0"></iframe>
-			<a class="ifa" href="/physics-applied/vector_addition.html"></a>
+			<iframe loading=lazy src="vector_addition.html" frameborder="0"></iframe>
+			<a class="ifa" href="vector_addition.html"></a>
 		</div>
 	</article>
 	<article>
-		<h2><a href="/physics-applied/friction_coefficients.html">Static And Kinematic Friction Coefficients</a></h3>
+		<h2><a href="friction_coefficients.html">Static And Kinematic Friction Coefficients</a></h2>
 		<p class="meta">Mar 26, 2023</p>
 		<p>The static friction coefficient $\mu_{s}$ and the kinematic friction coefficent $\mu_{k}$. Static friction keeps objects at rest staying at rest, and the kinematic friction slows down objects in already in motion.</p>
 		<p>An objects friction is in direct relationship with the force applied from another object contacting against it, the normal force $F_n$. </p>
@@ -55,8 +55,35 @@
 		\end{align*}
 		$$
 		<div class="ifc">
-			<iframe loading=lazy src="/physics-applied/friction_coefficients.html" frameborder="0"></iframe>
-			<a class="ifa" href="/physics-applied/friction_coefficients.html"></a>
+			<iframe loading=lazy src="friction_coefficients.html" frameborder="0"></iframe>
+			<a class="ifa" href="friction_coefficients.html"></a>
+		</div>
+	</article>
+	<article>
+		<h2><a href="wave_generator.html">Transverse Wave Motion</a></h2>
+		<p class="meta">May 5, 2023</p>
+		<p>The <i>amplitude</i> $A$ of a transverse wave determines the height or intensity of the wave, measures in metres $m$. The <i>wavelength</i> $\lambda$ corresponds to the distance between two adjacent crests or troughs, also measured in metres $m$. The <i>wave velocity</i> $v$ refers to the rate at which the wave energy travels through the medium, measured in $ms^{-1}$.</p>
+		<p>Wave period $T$ and frequency $f$ are closely related. Frequency measures the number of cycles per second in the SI unit hertz $\text{Hz}$. The wave period is the time taken in seconds $s$ for one wave cycle.</p>
+		$$
+		\begin{align*}
+		f = \frac{v}{\lambda} &&
+		\lambda = \frac{v}{f} &&
+		v = f\lambda &&
+		\end{align*}
+		$$
+		$$
+		\begin{align*}
+		f = \frac{1}{T} &&
+		T = \frac{1}{f} &&
+		\end{align*}
+		$$
+		Graphing a sinusoidal wave requires the wavelength $\lambda$ and amplitude $A$.
+		$$
+		f(x) = A \sin \frac{2\pi}{\lambda} x
+		$$
+		<div class="ifc">
+			<iframe loading=lazy src="wave_generator.html" frameborder="0"></iframe>
+			<a class="ifa" href="wave_generator.html"></a>
 		</div>
 	</article>
 	<footer>
