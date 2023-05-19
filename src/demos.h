@@ -73,6 +73,10 @@ static inline ImVec2 m_vmuls(ImVec2 a, float b)
 	return (ImVec2){a.x * b, a.y * b};
 }
 
+static inline ImVec2 m_offset(ImVec2 a, float x, float y) {
+	return (ImVec2){a.x + x, a.y + y};
+}
+
 static inline ImVec2 m_rct(ImVec2 world_center, ImVec2 a)
 {
 	return m_vadd(m_real_coords(a), world_center);

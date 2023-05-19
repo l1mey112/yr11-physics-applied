@@ -56,18 +56,6 @@ static ImVec2 wave_point(ImVec2 wc, float y_diff, float x_pos, float amplitude, 
 	return p1;
 }
 
-/* static void measuring_rect(ImVec2 tl_origin, float y_diff, float scalar, float height, ImU32 col)
-{
-	y_diff = tl_origin.y + y_diff;
-	ImDrawList_AddRectFilled(__dl, (ImVec2){tl_origin.x, y_diff}, (ImVec2){tl_origin.x + scalar, y_diff + height}, col, 0.f, 0);
-}
-
-static void measuring_rect_vert(ImVec2 tl_origin, float x_diff, float scalar, float height, ImU32 col)
-{
-	x_diff = tl_origin.x + x_diff;
-	ImDrawList_AddRectFilled(__dl, (ImVec2){x_diff, tl_origin.y}, (ImVec2){x_diff - height, x_diff + scalar}, col, 0.f, 0);
-} */
-
 static void arrow(ImVec2 start, ImVec2 end, ImU32 color, float thickness, float sz)
 {
     ImDrawList_AddLine(__dl, start, end, color, thickness);
@@ -91,12 +79,29 @@ static void frame(void)
 {
 	FRAME_PASS_BEGIN
 
+	static bool freeze = false;
+	static bool show_arrows = true;
+
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Hello Dear ImGui!", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	igCheckbox("Show About", &show_about);
-	igText("dt: %g", __io->DeltaTime);
+	{
+		igTextWrapped("Welcome to the Sinusoidal Wave Simulation!");
+		igTextWrapped("This simulation allows you to visualize a sinusoidal wave in real-time.");
+		igSeparator();
+		igTextWrapped("Amplitude (A): Determines the maximum displacement of the wave from its equilibrium position.");
+		igSeparator();
+		igTextWrapped("Frequency (f): Represents the number of complete cycles the wave completes in one second.");
+		igSeparator();
+		igTextWrapped("Wave Velocity (v): Determines how fast the wave propagates through the medium.");
+
+		// igTextWrapped("Adjust the following parameters to control the wave characteristics:");
+		// igTextWrapped("Key Concepts:");
+		igSeparator();
+		igCheckbox("Show About", &show_about);
+		igCheckbox("Show Arrows", &show_arrows);
+	}
 	igEnd();
 
 	ImVec2 wc = HANDLE_PAN();
@@ -106,27 +111,20 @@ static void frame(void)
 	static float amplitude = 200.f;
 	static float frequency = 0.6f;
 
-	static bool freeze = false;
-
 	float wavelength = speed / frequency;
 
-	//igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f, __io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
+	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f + 100.f, __io->DisplaySize.y / 2.0f + 100.f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
 		igSliderFloat("Amplitude (A)", &amplitude, 10.f, 1000.f, "%g m", ImGuiSliderFlags_AlwaysClamp);
-		igSliderFloat("Frequency (f)", &frequency, 0.01f, 2.f, "%g Hz", ImGuiSliderFlags_AlwaysClamp);
-		//igSliderFloat("Wavelength (lambda)", &wavelength, 100.f, 1000.f, "%g m", ImGuiSliderFlags_AlwaysClamp);
+		igSliderFloat("Frequency (f)", &frequency, 0.05f, 2.f, "%g Hz", ImGuiSliderFlags_AlwaysClamp);
 		igSliderFloat("Wave Velocity (m/s)", &speed, 100.f, 1000.f, "%g m/s", ImGuiSliderFlags_AlwaysClamp);
-
-		// if (is_frequency)
-		// 	ratio_quotient(&wavelength, &speed, frequency);
 	}
 	igSeparator();
 	{
-		igCheckbox("Freeze", &freeze);
-		// igText("speed: %g", wavelength * frequency);
+		igCheckbox("Freeze Wave", &freeze);
 	}
 	igEnd();
 
@@ -137,11 +135,6 @@ static void frame(void)
 		f_diff = 0.f;
 	} else {
 		f_diff += __io->DeltaTime * speed;
-		/* float wavelength2 = wavelength * 2.f;
-		if (f_diff > wavelength2 && fmodf(f_diff, wavelength2) < __FLT_EPSILON__) {
-			igText("run!!");
-			f_diff -= wavelength2;
-		} */
 	}
 
 	const float interval = 2.f;
@@ -155,13 +148,16 @@ static void frame(void)
 	float p1 = hw + p_offset_x;
 	float p2 = p1 + wavelength;
 
-	// measuring_rect(b1_v, 0.f, speed, 10.f, IM_COL32(255, 255, 255, 30));
-	// measuring_rect(b1_v, 15.f, wavelength, 10.f, IM_COL32(255, 255, 255, 30));
-	// measuring_rect_vert((ImVec2){wc.x - 30.f, wc.y}, 0.f, amplitude, 10.f, IM_COL32(255, 255, 255, 30));
+	ImVec2 ap1 = m_offset(wc, 0.f, -amplitude);
+	ImVec2 ap2 = m_offset(wc, wavelength, 0.f);
+	ImVec2 ap3 = m_offset(wc, speed, -10.f);
 
-	// static void arrow(ImVec2 start, ImVec2 end, ImU32 color, float thickness, float arrowSize)
-	arrow(wc, (ImVec2){wc.x, wc.y - amplitude}, IM_COL32(185, 246, 170, 255), 2.f, 10.f);
-	arrow(wc, (ImVec2){wc.x + wavelength, wc.y}, IM_COL32(252, 217, 137, 255), 2.f, 10.f);
+	if (show_arrows)
+	{
+		arrow(wc, ap1, IM_COL32(252, 217, 137, 255) /* IM_COL32(185, 246, 170, 255) */, 2.f, 10.f);
+		arrow(wc, ap2, IM_COL32(252, 217, 137, 255), 2.f, 10.f);
+		arrow(m_offset(wc, 0.f, -10.f), ap3, IM_COL32(252, 217, 137, 255), 2.f, 10.f);
+	}
 
 	render_wave(wc, f_diff, p1, p2, interval, IM_COL32(255, 6, 0, 255), 3.f, amplitude, wavelength);
 
@@ -171,44 +167,20 @@ static void frame(void)
 	ImDrawList_AddCircleFilled(__dl, p1_v, 6.f, VEC_RED, 0);
 	ImDrawList_AddCircleFilled(__dl, p2_v, 6.f, VEC_RED, 0);
 
-	// ImVec2 t1_v = {p1_v.x, hh - (amplitude + 30.f)};
-	// ImVec2 t2_v = {p2_v.x, hh - (amplitude + 30.f)};
-
-	// ImDrawList_AddLine(__dl, t1_v, t2_v, VEC_RED, 2.5f);
-	// ImDrawList_AddLine(__dl, p1_v, t1_v, VEC_RED, 2.5f);
-	// ImDrawList_AddLine(__dl, p2_v, t2_v, VEC_RED, 2.5f);
-
-	// ImVec2 b1_v = {hw, hh + (amplitude - 30.f)};
-
-	/* static bool is_hitting = false;
-	bool is_hovering = false;
-
-	if (igIsMouseHoveringRect((ImVec2){t2_v.x - 20.f, t2_v.y - 20.f},
-							  (ImVec2){t2_v.x + 20.f, t2_v.y + 20.f}, false))
+	if (show_arrows)
 	{
-		is_hitting = true;
+		static char buf[128];
+
+		snprintf(buf, sizeof(buf), "Amplitude (A): %gm", amplitude);
+		ImDrawList_AddText_Vec2(__dl, m_offset(ap1, 20.f, -20.f), IM_COL32_WHITE, buf, NULL);
+
+		snprintf(buf, sizeof(buf), "Wavelength (lambda): %gm", wavelength);
+		ImDrawList_AddText_Vec2(__dl, m_offset(ap2, 20.f, -20.f), IM_COL32_WHITE, buf, NULL);
+
+		snprintf(buf, sizeof(buf), "Wave Velocity (v): %gm/s", speed);
+		ImDrawList_AddText_Vec2(__dl, m_offset(ap3, 20.f, 25.f), IM_COL32_WHITE, buf, NULL);
 	}
 
-	if (igIsMouseDragging(ImGuiMouseButton_Left, 0.f))
-	{
-		if (is_hitting)
-			p_offset_x += __io->MouseDelta.x;
-	}
-	else
-	{
-		if (is_hitting)
-			is_hovering = is_hitting;
-		is_hitting = false;
-	}
-
-	if (is_hovering)
-	{
-		ImDrawList_AddCircleFilled(__dl, t2_v, 10.f, IM_COL32(255, 255, 255, 80), 0);
-	}
-	else
-	{
-		ImDrawList_AddCircleFilled(__dl, t2_v, 8.f, VEC_RED, 0);
-	} */
 
 	if (show_about) {
 		ABOUT_WIDGET();
