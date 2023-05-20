@@ -64,7 +64,7 @@ struct SoftbodyCircle
 };
 
 SoftbodyCircle softbody = {
-	.radius = 100.f,
+	.radius = 150.f,
 	.position = {0},
 	.obj_count = VERT_COUNT_MAX,
 	.is_real = false,
@@ -136,27 +136,33 @@ static void integrate_softbody(float dt)
 		float force = distance * spring->stiffness;
 
 		ImVec2 fnet_dir = m_normalise(m_vsub(spring->a->pos, spring->b->pos));
-		float dot = m_dot(fnet_dir, m_vsub(spring->a->vel, spring->b->vel));
 
-		force += dot * spring->damping;
+		float dot = m_dot(fnet_dir, m_vsub(spring->a->vel, spring->b->vel));
+		float damping_force = dot * spring->damping;
+
+		force += damping_force;
 
 		if (!spring->a->is_fixed)
 		{
 			ImVec2 a_to_b = m_normalise(m_vsub(spring->b->pos, spring->a->pos));
 
-			spring->a->force.x += a_to_b.x * force;
-			spring->a->force.y += a_to_b.y * force;
+			spring->a->force.x += a_to_b.x * force / spring->a->mass;
+			spring->a->force.y += a_to_b.y * force / spring->a->mass;
 		}
 
 		if (!spring->b->is_fixed)
 		{
 			ImVec2 b_to_a = fnet_dir;
 
-			spring->b->force.x += b_to_a.x * force;
-			spring->b->force.y += b_to_a.y * force;
+			spring->b->force.x += b_to_a.x * force / spring->b->mass;
+			spring->b->force.y += b_to_a.y * force / spring->b->mass;
 		}
 
 		spring->factor = distance / spring->rest_length;
+		if (spring->factor < 0.f)
+			spring->factor = 0.f;
+		if (spring->factor > 1.f)
+			spring->factor = 1.f;
 	}
 
 	// --- apply ideal gas law [softbody physics]
@@ -201,7 +207,7 @@ static void integrate_softbody(float dt)
 		Spring *spring = &softbody.springs[i];
 
 		float distance = m_distance(spring->a->pos, spring->b->pos);
-		float force = distance * nrt / area;
+		float force = nrt / area * distance;
 
 		// rotate by 90 degrees to obtain **A** normal vector, not specifically the right one
 		ImVec2 nrm_dir = m_normalise(m_vsub(spring->a->pos, spring->b->pos));
@@ -261,7 +267,7 @@ static void integrate_softbody(float dt)
 
 static void init2(void)
 {
-	softbody.position.y = 100.f;
+	softbody.position.y = 150.f;
 	make_real_softbody(15.f, 1000.f, 15.f);
 }
 
@@ -287,10 +293,8 @@ static void frame(void)
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
 
-
 	static int is_hitting = -1;
 	int is_hovering = -1;
-
 
 	if (is_hitting == -1)
 	{
@@ -310,7 +314,8 @@ static void frame(void)
 
 	if (igIsMouseDragging(ImGuiMouseButton_Left, 0.f))
 	{
-		if (is_hitting != -1) {
+		if (is_hitting != -1)
+		{
 			Vertex *vertex = &softbody.vertices[is_hitting];
 
 			vertex->is_fixed = true;
@@ -319,9 +324,10 @@ static void frame(void)
 	}
 	else
 	{
-		if (is_hitting != -1) {
+		if (is_hitting != -1)
+		{
 			Vertex *vertex = &softbody.vertices[is_hitting];
-			
+
 			vertex->is_fixed = false;
 			is_hovering = is_hitting;
 		}
@@ -341,22 +347,43 @@ static void frame(void)
 
 	// --- render
 
-	for (int i = 0; i < softbody.obj_count; i++)
-	{
-		Vertex *vertex = &softbody.vertices[i];
-		if (is_hovering == i) {
-			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 25.f, IM_COL32(0, 0, 0, 100), 0);
-		} else if (is_hitting == i) { 
-			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 20.f, IM_COL32(255, 0, 0, 100), 0);
-		} else {
-			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 2.f, IM_COL32_WHITE, 0);
-		}
-	}
+	// ImDrawList_AddQuadFilled(__dl, (ImVec2){0.f, wc.y}, (ImVec2){__io->DisplaySize.x, wc.y}, (ImVec2){__io->DisplaySize.x, __io->DisplaySize.y}, (ImVec2){0.f, __io->DisplaySize.y}, IM_COL32(50, 50, 50, 255));
 
 	for (int i = 0; i < softbody.obj_count; i++)
 	{
 		Spring *spring = &softbody.springs[i];
-		ImDrawList_AddLine(__dl, m_rct(wc, spring->a->pos), m_rct(wc, spring->b->pos), IM_COL32_WHITE, 0);
+
+		igText("factor: %g", spring->factor);
+
+		ImU32 c = lerp_color(IM_COL32(0, 255, 0, 255), IM_COL32(255, 0, 0, 255), spring->factor);
+
+		ImDrawList_AddLine(__dl, m_rct(wc, spring->a->pos), m_rct(wc, spring->b->pos), c, (1.f - spring->factor) * 2.f + 1.f);
+	}
+
+	for (int i = 0; i < softbody.obj_count; i++)
+	{
+		Vertex *vertex = &softbody.vertices[i];
+
+		{
+			ImVec2 nvec = m_normalise(vertex->force);
+			nvec.x *= 100.f;
+			nvec.y *= 100.f;
+
+			ImDrawList_AddLine(__dl, m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 0);
+		}
+
+		if (is_hovering == i)
+		{
+			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 25.f, IM_COL32(0, 0, 0, 100), 0);
+		}
+		else if (is_hitting == i)
+		{
+			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 20.f, IM_COL32(255, 0, 0, 100), 0);
+		}
+		else
+		{
+			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 4.f, IM_COL32_WHITE, 0);
+		}
 	}
 
 	if (show_about)

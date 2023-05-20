@@ -162,6 +162,26 @@ static inline ImVec4 u32_to_vec4(ImU32 color)
 		(float)((color >> IM_COL32_A_SHIFT) & 0xFF) / 255.0f};
 }
 
+static ImU32 lerp_color(ImU32 color1, ImU32 color2, float t)
+{
+	ImVec4 col1 = u32_to_vec4(color1);
+	ImVec4 col2 = u32_to_vec4(color2);
+
+	float r = col1.x + (col2.x - col1.x) * t;
+	float g = col1.y + (col2.y - col1.y) * t;
+	float b = col1.z + (col2.z - col1.z) * t;
+	float a = col1.w + (col2.w - col1.w) * t;
+
+	ImU32 out = 0;
+
+    out |= (unsigned char)(r * 255.0f) << IM_COL32_R_SHIFT;
+    out |= (unsigned char)(g * 255.0f) << IM_COL32_G_SHIFT;
+    out |= (unsigned char)(b * 255.0f) << IM_COL32_B_SHIFT;
+    out |= (unsigned char)(a * 255.0f) << IM_COL32_A_SHIFT;
+
+	return out;
+}
+
 // Open the URL in `msg` in a new tab.
 //
 EM_JS(void, open_in_new_tab, (const char *msg), {
