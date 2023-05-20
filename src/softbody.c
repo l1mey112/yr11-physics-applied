@@ -28,7 +28,7 @@
 
 static bool show_about = true;
 
-#define VERT_COUNT_MAX 16
+#define VERT_COUNT_MAX 18
 
 typedef struct Vertex Vertex;
 typedef struct Spring Spring;
@@ -237,8 +237,6 @@ static void integrate_softbody(float dt)
 		float dx = nrm_dir.x * force;
 		float dy = nrm_dir.y * force;
 
-		igText("(%g, %g)", dx, dy);
-
 		spring->a->force.x += dx;
 		spring->a->force.y += dy;
 		spring->b->force.x += dx;
@@ -301,7 +299,12 @@ static void frame(void)
 	RENDER_GRID(wc);
 
 	static float acc = 0.0f;
-	const float phys_dt = 1.f / 60.f; // 50fps phys update
+
+	// 90fps phys update, yeah I know.
+	// I can easily get away with 60fps, 50fps is where the simulation breaks down.
+	// 50fps is possible with verlet integration, but then makes the code unergonomic and annoying to use.
+	// Semi Implicit Euler is good for now.
+	const float phys_dt = 1.f / 90.f;
 
 	acc += __io->DeltaTime;
 	while (acc >= phys_dt)
