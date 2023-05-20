@@ -180,17 +180,20 @@ static void frame(void)
 	static int is_hitting = -1;
 	int is_hovering = -1;
 
-	for (int idx = 0; idx < g_points_len; idx++)
+	if (is_hitting == -1)
 	{
-		Point point = g_points[idx];
-
-		ImVec2 rc = TO_REAL_COORDS(point.pos);
-
-		if (igIsMouseHoveringRect((ImVec2){rc.x - (POINTS_RAD * 2.f), rc.y - (POINTS_RAD * 2.f)},
-								  (ImVec2){rc.x + (POINTS_RAD * 2.f), rc.y + (POINTS_RAD * 2.f)}, false))
+		for (int idx = 0; idx < g_points_len; idx++)
 		{
-			is_hitting = idx;
-			break;
+			Point point = g_points[idx];
+
+			ImVec2 rc = TO_REAL_COORDS(point.pos);
+
+			if (igIsMouseHoveringRect((ImVec2){rc.x - (POINTS_RAD * 2.f), rc.y - (POINTS_RAD * 2.f)},
+									(ImVec2){rc.x + (POINTS_RAD * 2.f), rc.y + (POINTS_RAD * 2.f)}, false))
+			{
+				is_hitting = idx;
+				break;
+			}
 		}
 	}
 

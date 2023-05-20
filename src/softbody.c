@@ -111,22 +111,6 @@ static void make_real_softbody(float mass, float stiffness, float damping)
 	}
 }
 
-static void render_softbody(ImVec2 wc)
-{
-	for (int i = 0; i < softbody.obj_count; i++)
-	{
-		Vertex *vertex = &softbody.vertices[i];
-		ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 2.f, IM_COL32_WHITE, 0);
-		// ImDrawList_AddLine(__dl, m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, vertex->force)), IM_COL32_WHITE, 0);
-	}
-
-	for (int i = 0; i < softbody.obj_count; i++)
-	{
-		Spring *spring = &softbody.springs[i];
-		ImDrawList_AddLine(__dl, m_rct(wc, spring->a->pos), m_rct(wc, spring->b->pos), IM_COL32_WHITE, 0);
-	}
-}
-
 static void integrate_softbody(float dt)
 {
 	const float little_g = -9.8f * 60.f;
@@ -208,7 +192,8 @@ static void integrate_softbody(float dt)
 		int i_next = (i + 1) % softbody.obj_count;
 		area += softbody.vertices[i].pos.y * softbody.vertices[i_next].pos.x - softbody.vertices[i].pos.x * softbody.vertices[i_next].pos.x;
 	}
-	area *= -0.5f;
+	area *= 0.5f;
+	area = fabsf(area);
 
 	// --- perform ideal gas law
 	for (int i = 0; i < softbody.obj_count; i++)
@@ -243,7 +228,7 @@ static void integrate_softbody(float dt)
 		spring->b->force.y += dy;
 	}
 
-	// --- integrate forces and apply colision
+	// --- integrate forces and apply collision
 	for (int i = 0; i < softbody.obj_count; i++)
 	{
 		Vertex *vertex = &softbody.vertices[i];
@@ -262,16 +247,14 @@ static void integrate_softbody(float dt)
 		vertex->pos.x += vertex->vel.x * dt;
 		vertex->pos.y += vertex->vel.y * dt;
 
-		// --- apply line colision
+		// --- apply line collision
 		const float collision_damping = 0.5f;
 
 		if (vertex->pos.y < 0.f)
 		{
-			float t = -vertex->pos.y / vertex->vel.y;
-
-			vertex->pos.x += vertex->vel.x * t;
-			vertex->pos.y += vertex->vel.y * t;
-			vertex->vel.y *= -collision_damping;
+			vertex->pos.y = 0.f;
+			vertex->vel.y = -vertex->vel.y * collision_damping;
+			vertex->vel.x = vertex->vel.x * collision_damping;
 		}
 	}
 }
@@ -281,6 +264,12 @@ static void init2(void)
 	softbody.position.y = 100.f;
 	make_real_softbody(15.f, 1000.f, 15.f);
 }
+
+// 90fps phys update, yeah I know.
+// I can easily get away with 60fps, 50fps is where the simulation breaks down.
+// 50fps is possible with verlet integration, but then makes the code unergonomic and annoying to use.
+// Semi Implicit Euler is good for now.
+const float phys_dt = 1.f / 90.f;
 
 static void frame(void)
 {
@@ -298,13 +287,50 @@ static void frame(void)
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
 
-	static float acc = 0.0f;
 
-	// 90fps phys update, yeah I know.
-	// I can easily get away with 60fps, 50fps is where the simulation breaks down.
-	// 50fps is possible with verlet integration, but then makes the code unergonomic and annoying to use.
-	// Semi Implicit Euler is good for now.
-	const float phys_dt = 1.f / 90.f;
+	static int is_hitting = -1;
+	int is_hovering = -1;
+
+
+	if (is_hitting == -1)
+	{
+		for (int i = 0; i < softbody.obj_count; i++)
+		{
+			Vertex *vertex = &softbody.vertices[i];
+
+			ImVec2 rc = m_rct(wc, vertex->pos);
+
+			if (igIsMouseHoveringRect(m_offset(rc, -25.f, -25.f), m_offset(rc, 25.f, 25.f), false))
+			{
+				is_hitting = i;
+				break;
+			}
+		}
+	}
+
+	if (igIsMouseDragging(ImGuiMouseButton_Left, 0.f))
+	{
+		if (is_hitting != -1) {
+			Vertex *vertex = &softbody.vertices[is_hitting];
+
+			vertex->is_fixed = true;
+			vertex->pos = m_ract(wc, __io->MousePos);
+		}
+	}
+	else
+	{
+		if (is_hitting != -1) {
+			Vertex *vertex = &softbody.vertices[is_hitting];
+			
+			vertex->is_fixed = false;
+			is_hovering = is_hitting;
+		}
+		is_hitting = -1;
+	}
+
+	// --- physics
+
+	static float acc = 0.0f;
 
 	acc += __io->DeltaTime;
 	while (acc >= phys_dt)
@@ -313,7 +339,25 @@ static void frame(void)
 		acc -= phys_dt;
 	}
 
-	render_softbody(wc);
+	// --- render
+
+	for (int i = 0; i < softbody.obj_count; i++)
+	{
+		Vertex *vertex = &softbody.vertices[i];
+		if (is_hovering == i) {
+			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 25.f, IM_COL32(0, 0, 0, 100), 0);
+		} else if (is_hitting == i) { 
+			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 20.f, IM_COL32(255, 0, 0, 100), 0);
+		} else {
+			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 2.f, IM_COL32_WHITE, 0);
+		}
+	}
+
+	for (int i = 0; i < softbody.obj_count; i++)
+	{
+		Spring *spring = &softbody.springs[i];
+		ImDrawList_AddLine(__dl, m_rct(wc, spring->a->pos), m_rct(wc, spring->b->pos), IM_COL32_WHITE, 0);
+	}
 
 	if (show_about)
 	{
