@@ -1,24 +1,24 @@
 /*
  * Copyright (C) 2022 l-m.dev
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
-*/
+ */
 #ifndef WORLD_H
 #define WORLD_H
 
@@ -31,7 +31,8 @@
 typedef struct Object Object;
 typedef struct World World;
 
-struct Object {
+struct Object
+{
 	ImVec2 pos;
 	ImVec2 vel;
 	// ImVec2 acc;
@@ -39,14 +40,16 @@ struct Object {
 	float rad;
 };
 
-struct World {
+struct World
+{
 	Object objects[MAX_OBJECTS];
 	int obj_count;
 } __world;
 
 int world_add_object(ImVec2 pos, float mass, float rad)
 {
-	if (__world.obj_count >= MAX_OBJECTS) {
+	if (__world.obj_count >= MAX_OBJECTS)
+	{
 		return -1;
 	}
 
@@ -55,7 +58,8 @@ int world_add_object(ImVec2 pos, float mass, float rad)
 	obj.mass = mass;
 	obj.rad = rad;
 
-	if (__world.obj_count > 0) {
+	if (__world.obj_count > 0)
+	{
 		Object *last = &__world.objects[__world.obj_count - 1];
 		if (last->pos.x == pos.x && last->pos.y == pos.y)
 			return -1;
@@ -68,7 +72,8 @@ int world_add_object(ImVec2 pos, float mass, float rad)
 	return idx;
 }
 
-void world_integrate_collision(Object *obj1, Object *obj2) {
+void world_integrate_collision(Object *obj1, Object *obj2)
+{
 	float dx = obj1->pos.x - obj2->pos.x;
 	float dy = obj1->pos.y - obj2->pos.y;
 	float dist_squared = dx * dx + dy * dy;
@@ -81,7 +86,7 @@ void world_integrate_collision(Object *obj1, Object *obj2) {
 		return;
 
 	// magnitude
-	float dist = sqrt(dist_squared);
+	float dist = sqrtf(dist_squared);
 
 	// normal vectors, magnitude of 1.0f
 	float nx = dx / dist;
@@ -99,7 +104,7 @@ void world_integrate_collision(Object *obj1, Object *obj2) {
 	// obj1->coeff + obj2->coeff
 	// 0.0: completely inelastic collision
 	// 1.0: completely elastic collision
-	// float e = (1.f + 1.f) / 2.f;	
+	// float e = (1.f + 1.f) / 2.f;
 	float e = 1.f;
 
 	// implulse scalar
@@ -116,7 +121,8 @@ void world_integrate_collision(Object *obj1, Object *obj2) {
 	obj2->vel.y -= 1.0f / obj2->mass * yimp;
 
 	float overlap = obj1->rad + obj2->rad - dist;
-	if (overlap > 0.f) {
+	if (overlap > 0.f)
+	{
 		float ov_x = overlap * nx / 2.f;
 		float ov_y = overlap * ny / 2.f;
 
@@ -137,16 +143,19 @@ void world_integrate(float dt)
 		// obj->vel.y += obj->acc.y * dt;
 	} */
 
-	for (int i = 0; i < __world.obj_count; i++) {
-		for (int j = i + 1; j < __world.obj_count; j++) {
-			Object* obj1 = &__world.objects[i];
-			Object* obj2 = &__world.objects[j];
+	for (int i = 0; i < __world.obj_count; i++)
+	{
+		for (int j = i + 1; j < __world.obj_count; j++)
+		{
+			Object *obj1 = &__world.objects[i];
+			Object *obj2 = &__world.objects[j];
 
 			world_integrate_collision(obj1, obj2);
 		}
 	}
 
-	for (int i = 0; i < __world.obj_count; i++) {
+	for (int i = 0; i < __world.obj_count; i++)
+	{
 		Object *obj = &__world.objects[i];
 
 		// semi-implicit euler

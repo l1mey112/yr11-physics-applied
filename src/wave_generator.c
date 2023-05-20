@@ -1,24 +1,24 @@
 /*
  * Copyright (C) 2022 l-m.dev
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
-*/
+ */
 #include "demos.h"
 
 static bool show_about = true;
@@ -35,13 +35,15 @@ static void render_wave(ImVec2 wc, float y_diff, float x_start, float x_end, flo
 
 	ImVec2 p1 = {x_start, wc.y - ycord(amplitude, wavelength, x_start - hw - y_diff)};
 
-	for (;;) {
+	for (;;)
+	{
 		float x_new = p1.x + interval;
 		ImVec2 p2 = {x_new, wc.y - ycord(amplitude, wavelength, x_new - hw - y_diff)};
 
 		ImDrawList_AddLine(__dl, p1, p2, col, thickness);
 
-		if (p2.x > x_end) break;
+		if (p2.x > x_end)
+			break;
 		p1 = p2;
 	}
 }
@@ -58,18 +60,18 @@ static ImVec2 wave_point(ImVec2 wc, float y_diff, float x_pos, float amplitude, 
 
 static void arrow(ImVec2 start, ImVec2 end, ImU32 color, float thickness, float sz)
 {
-    ImDrawList_AddLine(__dl, start, end, color, thickness);
+	ImDrawList_AddLine(__dl, start, end, color, thickness);
 
-    ImVec2 dir = {end.x - start.x, end.y - start.y};
-    float length = sqrt(dir.x * dir.x + dir.y * dir.y);
-    ImVec2 norm_dir = {dir.x / length, dir.y / length};
+	ImVec2 dir = {end.x - start.x, end.y - start.y};
+	float length = sqrtf(dir.x * dir.x + dir.y * dir.y);
+	ImVec2 norm_dir = {dir.x / length, dir.y / length};
 
-    ImVec2 p1 = {end.x - norm_dir.x * sz - norm_dir.y * sz * 0.6,
-                                      end.y - norm_dir.y * sz + norm_dir.x * sz * 0.6};
-    ImVec2 p2 = {end.x - norm_dir.x * sz + norm_dir.y * sz * 0.6,
-                                      end.y - norm_dir.y * sz - norm_dir.x * sz * 0.6};
+	ImVec2 p1 = {end.x - norm_dir.x * sz - norm_dir.y * sz * 0.6,
+				 end.y - norm_dir.y * sz + norm_dir.x * sz * 0.6};
+	ImVec2 p2 = {end.x - norm_dir.x * sz + norm_dir.y * sz * 0.6,
+				 end.y - norm_dir.y * sz - norm_dir.x * sz * 0.6};
 
-    ImDrawList_AddTriangleFilled(__dl, end, p1, p2, color);
+	ImDrawList_AddTriangleFilled(__dl, end, p1, p2, color);
 }
 
 #define VEC_RED (IM_COL32(255, 6, 0, 255))
@@ -136,10 +138,13 @@ static void frame(void)
 
 	static float f_diff = 0.f;
 	ImVec2 ds = DELTA_SCROLL();
-	
-	if (freeze) {
+
+	if (freeze)
+	{
 		f_diff = 0.f;
-	} else {
+	}
+	else
+	{
 		f_diff += __io->DeltaTime * speed;
 	}
 
@@ -185,10 +190,10 @@ static void frame(void)
 		ImDrawList_AddText_Vec2(__dl, m_offset(ap3, 20.f, 25.f), IM_COL32_WHITE, buf, NULL);
 	}
 
-
-	if (show_about) {
+	if (show_about)
+	{
 		ABOUT_WIDGET();
-	}	
+	}
 
 	FRAME_PASS_END
 }
