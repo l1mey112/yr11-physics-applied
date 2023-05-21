@@ -174,10 +174,10 @@ static ImU32 lerp_color(ImU32 color1, ImU32 color2, float t)
 
 	ImU32 out = 0;
 
-    out |= (unsigned char)(r * 255.0f) << IM_COL32_R_SHIFT;
-    out |= (unsigned char)(g * 255.0f) << IM_COL32_G_SHIFT;
-    out |= (unsigned char)(b * 255.0f) << IM_COL32_B_SHIFT;
-    out |= (unsigned char)(a * 255.0f) << IM_COL32_A_SHIFT;
+	out |= (unsigned char)(r * 255.0f) << IM_COL32_R_SHIFT;
+	out |= (unsigned char)(g * 255.0f) << IM_COL32_G_SHIFT;
+	out |= (unsigned char)(b * 255.0f) << IM_COL32_B_SHIFT;
+	out |= (unsigned char)(a * 255.0f) << IM_COL32_A_SHIFT;
 
 	return out;
 }

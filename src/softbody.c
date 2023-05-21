@@ -259,7 +259,7 @@ static void integrate_softbody(float dt)
 
 		float fx = vertex->gravity_force.x + vertex->spring_force.x + vertex->pressure_force.x;
 		float fy = vertex->gravity_force.y + vertex->spring_force.y + vertex->pressure_force.y;
-		
+
 		vertex->vel.x += fx / vertex->mass * dt;
 		vertex->vel.y += fy / vertex->mass * dt;
 
@@ -408,7 +408,7 @@ static void frame(void)
 			arrow(m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 2.f, 10.f);
 		} */
 
-		//show_arrow(wc, vertex, vertex->gravity_force, 0.1f);
+		// show_arrow(wc, vertex, vertex->gravity_force, 0.1f);
 		show_arrow(wc, vertex, vertex->spring_force, 0.01f);
 		show_arrow(wc, vertex, vertex->pressure_force, 0.01f);
 
