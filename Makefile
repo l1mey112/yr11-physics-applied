@@ -7,7 +7,7 @@ FCFLAGS =
 
 ifeq ($(PROD),1)
 	CFLAGS += -Oz --closure=1 -flto
-	FCFLAGS += -sMINIFY_HTML -sEVAL_CTORS --ignore-external-input
+	FCFLAGS += -sMINIFY_HTML -sEVAL_CTORS=2
 endif
 
 .PHONY: all
