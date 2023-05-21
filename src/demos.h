@@ -112,8 +112,8 @@ static inline float m_dot(ImVec2 a, ImVec2 b)
 static inline ImVec2 m_midpoint(ImVec2 a, ImVec2 b)
 {
 	return (ImVec2){
-		(a.x + a.x) / 2.f,
-		(a.y + a.y) / 2.f,
+		(a.x + b.x) / 2.f,
+		(a.y + b.y) / 2.f,
 	};
 }
 
@@ -363,6 +363,22 @@ static ImVec2 HANDLE_PAN()
 static inline ImVec2 DELTA_SCROLL()
 {
 	return __delta_scroll;
+}
+
+static void arrow(ImVec2 start, ImVec2 end, ImU32 color, float thickness, float sz)
+{
+	ImDrawList_AddLine(__dl, start, end, color, thickness);
+
+	ImVec2 dir = {end.x - start.x, end.y - start.y};
+	float length = sqrtf(dir.x * dir.x + dir.y * dir.y);
+	ImVec2 norm_dir = {dir.x / length, dir.y / length};
+
+	ImVec2 p1 = {end.x - norm_dir.x * sz - norm_dir.y * sz * 0.6,
+				 end.y - norm_dir.y * sz + norm_dir.x * sz * 0.6};
+	ImVec2 p2 = {end.x - norm_dir.x * sz + norm_dir.y * sz * 0.6,
+				 end.y - norm_dir.y * sz - norm_dir.x * sz * 0.6};
+
+	ImDrawList_AddTriangleFilled(__dl, end, p1, p2, color);
 }
 
 #endif // DEMOS_H

@@ -58,22 +58,6 @@ static ImVec2 wave_point(ImVec2 wc, float y_diff, float x_pos, float amplitude, 
 	return p1;
 }
 
-static void arrow(ImVec2 start, ImVec2 end, ImU32 color, float thickness, float sz)
-{
-	ImDrawList_AddLine(__dl, start, end, color, thickness);
-
-	ImVec2 dir = {end.x - start.x, end.y - start.y};
-	float length = sqrtf(dir.x * dir.x + dir.y * dir.y);
-	ImVec2 norm_dir = {dir.x / length, dir.y / length};
-
-	ImVec2 p1 = {end.x - norm_dir.x * sz - norm_dir.y * sz * 0.6,
-				 end.y - norm_dir.y * sz + norm_dir.x * sz * 0.6};
-	ImVec2 p2 = {end.x - norm_dir.x * sz + norm_dir.y * sz * 0.6,
-				 end.y - norm_dir.y * sz - norm_dir.x * sz * 0.6};
-
-	ImDrawList_AddTriangleFilled(__dl, end, p1, p2, color);
-}
-
 #define VEC_RED (IM_COL32(255, 6, 0, 255))
 #define VEC_RED_A (IM_COL32(255, 6, 0, 100))
 

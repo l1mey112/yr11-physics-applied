@@ -38,9 +38,11 @@ struct Vertex
 {
 	ImVec2 pos;
 	ImVec2 vel;
-	ImVec2 force;
 	float mass;
 	bool is_fixed;
+	ImVec2 gravity_force;
+	ImVec2 spring_force;
+	ImVec2 pressure_force;
 };
 
 struct Spring
@@ -91,7 +93,6 @@ static void make_real_softbody(float mass, float stiffness, float damping)
 		softbody.vertices[i] = (Vertex){
 			.pos = position,
 			.vel = {0},
-			.force = 0,
 			.mass = mass_per,
 			.is_fixed = false,
 		};
@@ -113,7 +114,7 @@ static void make_real_softbody(float mass, float stiffness, float damping)
 
 static void integrate_softbody(float dt)
 {
-	const float little_g = -9.8f * 60.f;
+	const float little_g = -9.8f * 80.f;
 
 	// --- gravity [reset forces]
 	for (int i = 0; i < softbody.obj_count; i++)
@@ -123,8 +124,12 @@ static void integrate_softbody(float dt)
 		if (vertex->is_fixed)
 			continue;
 
-		vertex->force.x = 0.f;
-		vertex->force.y = little_g * vertex->mass;
+		vertex->spring_force.x = 0.f;
+		vertex->spring_force.y = 0.f;
+		vertex->pressure_force.x = 0.f;
+		vertex->pressure_force.y = 0.f;
+		vertex->gravity_force.x = 0.f;
+		vertex->gravity_force.y = little_g * vertex->mass;
 	}
 
 	// --- spring hookes law
@@ -146,16 +151,16 @@ static void integrate_softbody(float dt)
 		{
 			ImVec2 a_to_b = m_normalise(m_vsub(spring->b->pos, spring->a->pos));
 
-			spring->a->force.x += a_to_b.x * force / spring->a->mass;
-			spring->a->force.y += a_to_b.y * force / spring->a->mass;
+			spring->a->spring_force.x += a_to_b.x * force / spring->a->mass;
+			spring->a->spring_force.y += a_to_b.y * force / spring->a->mass;
 		}
 
 		if (!spring->b->is_fixed)
 		{
 			ImVec2 b_to_a = fnet_dir;
 
-			spring->b->force.x += b_to_a.x * force / spring->b->mass;
-			spring->b->force.y += b_to_a.y * force / spring->b->mass;
+			spring->b->spring_force.x += b_to_a.x * force / spring->b->mass;
+			spring->b->spring_force.y += b_to_a.y * force / spring->b->mass;
 		}
 
 		spring->factor = distance / spring->rest_length;
@@ -196,27 +201,32 @@ static void integrate_softbody(float dt)
 	for (int i = 0; i < softbody.obj_count; i++)
 	{
 		int i_next = (i + 1) % softbody.obj_count;
-		area += softbody.vertices[i].pos.y * softbody.vertices[i_next].pos.x - softbody.vertices[i].pos.x * softbody.vertices[i_next].pos.x;
+		area += softbody.vertices[i].pos.x *
+					softbody.vertices[i_next].pos.y -
+				softbody.vertices[i_next].pos.x *
+					softbody.vertices[i].pos.y;
 	}
-	area *= 0.5f;
-	area = fabsf(area);
+	area = fabs(area * 0.5);
+
+	float internal_pressure = nrt / area;
 
 	// --- perform ideal gas law
 	for (int i = 0; i < softbody.obj_count; i++)
 	{
 		Spring *spring = &softbody.springs[i];
+		Spring *opposite_spring = &softbody.springs[(i + softbody.obj_count / 2) % softbody.obj_count];
 
 		float distance = m_distance(spring->a->pos, spring->b->pos);
-		float force = nrt / area * distance;
+		// p = F/A
+		// F = pA
+		float force = internal_pressure * distance;
 
-		// rotate by 90 degrees to obtain **A** normal vector, not specifically the right one
-		ImVec2 nrm_dir = m_normalise(m_vsub(spring->a->pos, spring->b->pos));
-		nrm_dir = (ImVec2){nrm_dir.y, -nrm_dir.x};
-
-		Spring *opposite_spring = &softbody.springs[(i + softbody.obj_count / 2) % softbody.obj_count];
-		ImVec2 opposite_midpoint = m_midpoint(opposite_spring->a->pos, opposite_spring->b->pos);
 		ImVec2 midpoint = m_midpoint(spring->a->pos, spring->b->pos);
-		ImVec2 outward_vec = m_normalise(m_vsub(midpoint, opposite_midpoint));
+		ImVec2 opposite_midpoint = m_midpoint(opposite_spring->a->pos, opposite_spring->b->pos);
+		ImVec2 outward_vec = m_vsub(midpoint, opposite_midpoint);
+
+		ImVec2 nrm_dir = m_normalise(m_vsub(spring->b->pos, spring->a->pos));
+		nrm_dir = (ImVec2){nrm_dir.y, -nrm_dir.x};
 
 		// calculate the right normal vector
 		if (m_dot(nrm_dir, outward_vec) < 0.f)
@@ -228,10 +238,10 @@ static void integrate_softbody(float dt)
 		float dx = nrm_dir.x * force;
 		float dy = nrm_dir.y * force;
 
-		spring->a->force.x += dx;
-		spring->a->force.y += dy;
-		spring->b->force.x += dx;
-		spring->b->force.y += dy;
+		spring->a->pressure_force.x += dx;
+		spring->a->pressure_force.y += dy;
+		spring->b->pressure_force.x += dx;
+		spring->b->pressure_force.y += dy;
 	}
 
 	// --- integrate forces and apply collision
@@ -246,8 +256,12 @@ static void integrate_softbody(float dt)
 
 		// a = F / m
 		// v += a * dt
-		vertex->vel.x += vertex->force.x / vertex->mass * dt;
-		vertex->vel.y += vertex->force.y / vertex->mass * dt;
+
+		float fx = vertex->gravity_force.x + vertex->spring_force.x + vertex->pressure_force.x;
+		float fy = vertex->gravity_force.y + vertex->spring_force.y + vertex->pressure_force.y;
+		
+		vertex->vel.x += fx / vertex->mass * dt;
+		vertex->vel.y += fy / vertex->mass * dt;
 
 		// p += v * dt
 		vertex->pos.x += vertex->vel.x * dt;
@@ -276,6 +290,18 @@ static void init2(void)
 // 50fps is possible with verlet integration, but then makes the code unergonomic and annoying to use.
 // Semi Implicit Euler is good for now.
 const float phys_dt = 1.f / 90.f;
+
+static void show_arrow(ImVec2 wc, Vertex *vertex, ImVec2 force, float p)
+{
+	if (!vertex->is_fixed)
+	{
+		force.x *= p;
+		force.y *= p;
+
+		// ImDrawList_AddLine(__dl, m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 0);
+		arrow(m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, force)), IM_COL32(255, 255, 255, 80), 2.f, 10.f);
+	}
+}
 
 static void frame(void)
 {
@@ -353,7 +379,7 @@ static void frame(void)
 	{
 		Spring *spring = &softbody.springs[i];
 
-		igText("factor: %g", spring->factor);
+		// igText("factor: %g", spring->factor);
 
 		ImU32 c = lerp_color(IM_COL32(0, 255, 0, 255), IM_COL32(255, 0, 0, 255), spring->factor);
 
@@ -364,14 +390,29 @@ static void frame(void)
 	{
 		Vertex *vertex = &softbody.vertices[i];
 
-		{
+		/* {
 			ImVec2 nvec = m_normalise(vertex->force);
 			nvec.x *= 100.f;
 			nvec.y *= 100.f;
 
 			ImDrawList_AddLine(__dl, m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 0);
-		}
+		} */
 
+		/* if (!vertex->is_fixed)
+		{
+			ImVec2 nvec = vertex->force;
+			nvec.x *= 0.010f;
+			nvec.y *= 0.010f;
+
+			// ImDrawList_AddLine(__dl, m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 0);
+			arrow(m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 2.f, 10.f);
+		} */
+
+		//show_arrow(wc, vertex, vertex->gravity_force, 0.1f);
+		show_arrow(wc, vertex, vertex->spring_force, 0.01f);
+		show_arrow(wc, vertex, vertex->pressure_force, 0.01f);
+
+		ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 4.f, IM_COL32_WHITE, 0);
 		if (is_hovering == i)
 		{
 			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 25.f, IM_COL32(0, 0, 0, 100), 0);
@@ -379,10 +420,6 @@ static void frame(void)
 		else if (is_hitting == i)
 		{
 			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 20.f, IM_COL32(255, 0, 0, 100), 0);
-		}
-		else
-		{
-			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 4.f, IM_COL32_WHITE, 0);
 		}
 	}
 
