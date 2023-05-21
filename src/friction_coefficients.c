@@ -151,7 +151,7 @@ static void frame(void)
 		const char* items[] = { "Fictional object", "Rubber on concrete", "Shoes on wood", "Steel on ice" };
 		const float static_coefficents[] = { 0.6f, 1.0f, 0.9f, 0.4f };
 		const float kinetic_coefficents[] = { 0.4f, 0.7f, 0.7f, 0.02f };
-        static int item_curr = 0;
+		static int item_curr = 0;
 		if (item_curr != -1) {
 			static_coefficient = static_coefficents[item_curr];
 			kinetic_coefficient = kinetic_coefficents[item_curr];
@@ -160,7 +160,7 @@ static void frame(void)
 			item_curr = -1;
 		if (igSliderFloat("Kinetic Friction", &kinetic_coefficient, 0.f, 1.f, "%g uk", ImGuiSliderFlags_AlwaysClamp))
 			item_curr = -1;
-        igCombo_Str_arr("Preset Coefficents", &item_curr, items, 4, 0);
+		igCombo_Str_arr("Preset Coefficents", &item_curr, items, 4, 0);
 	}
 
 	RENDER_GRID(wc);
@@ -196,7 +196,7 @@ static void frame(void)
 	{
 		igSeparator();
 		igProgressBar(overpower_applied_percentage, (ImVec2){0.f, 0.f}, NULL);
-        igSameLine(.0f, igGetStyle()->ItemInnerSpacing.x);
+		igSameLine(.0f, igGetStyle()->ItemInnerSpacing.x);
 		if (overpower_applied_percentage >= 1.f) {
 			igTextColored(u32_to_vec4(IM_COL32(0,162,60, 255)), "Net Force (Fnet): %8g N", f_net);
 			igTextWrapped("The current applied force is overpowering the negative force applied by static friction!");

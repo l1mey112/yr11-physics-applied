@@ -180,7 +180,7 @@ static void frame(void)
 	static int is_hitting = -1;
 	int is_hovering = -1;
 
-	if (is_hitting == -1)
+	if (is_hitting == -1 && !__io->WantCaptureMouse)
 	{
 		for (int idx = 0; idx < g_points_len; idx++)
 		{

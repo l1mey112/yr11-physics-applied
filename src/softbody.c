@@ -57,8 +57,8 @@ struct Spring
 
 struct SoftbodyCircle
 {
-	float radius;	 // will be useless after made "real"
-	ImVec2 position; // will be useless after made "real"
+	float radius;
+	ImVec2 position;
 	int obj_count;
 	bool is_real;
 	Vertex vertices[VERT_COUNT_MAX];
@@ -112,7 +112,7 @@ static void make_real_softbody(float mass, float stiffness, float damping)
 	}
 }
 
-static void integrate_softbody(float dt, float *out_internal_pressure)
+static void integrate_softbody(float dt, float nrt, float *out_internal_pressure, float *out_area)
 {
 	const float little_g = -9.8f * 80.f;
 
@@ -179,9 +179,6 @@ static void integrate_softbody(float dt, float *out_internal_pressure)
 	//     n = Moles
 	//     R = Universal gas constant
 	//     T = Temperature in kelvin
-	const float nrt = 5000.0f             /* moles */ 
-	                * 8.31446261815324 /* molar gas constant */
-	                * 293.15;          /* room temperature in kelvin */
 	//
 	// P = F/A
 	//     Pressure = Force / Area
@@ -210,6 +207,7 @@ static void integrate_softbody(float dt, float *out_internal_pressure)
 
 	float internal_pressure = nrt / area;
 	*out_internal_pressure = internal_pressure;
+	*out_area = area;
 
 	// --- perform ideal gas law
 	for (int i = 0; i < softbody.obj_count; i++)
@@ -292,16 +290,12 @@ static void init2(void)
 // Semi Implicit Euler is good for now.
 const float phys_dt = 1.f / 90.f;
 
-static void show_arrow(ImVec2 wc, Vertex *vertex, ImVec2 force, float p)
+static void show_arrow(ImVec2 wc, ImVec2 pos, ImVec2 force, float p, ImU32 col)
 {
-	if (!vertex->is_fixed)
-	{
-		force.x *= p;
-		force.y *= p;
+	force.x *= p;
+	force.y *= p;
 
-		// ImDrawList_AddLine(__dl, m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 0);
-		arrow(m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, force)), IM_COL32(255, 255, 255, 80), 2.f, 10.f);
-	}
+	arrow(m_rct(wc, pos), m_rct(wc, m_vadd(pos, force)), col, 2.f, 10.f);
 }
 
 static void frame(void)
@@ -313,14 +307,24 @@ static void frame(void)
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Hello Dear ImGui!", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
+		igTextWrapped("Welcome to the Softbody Pressure Simulation!");
+		igTextWrapped("This simulation allows you to explore the behavior of a softbody system.");
+		igSeparator();
+		igTextWrapped("The softbody is a collection of points constrained by springs, being pushed out by an internal pressure bounded by the Ideal Gas Law.");
+		igTextWrapped("Internal pressure is a product of the current temperature and number of substance, this value is then used to calculate internal pressure forces using the shapes volume.");
+		igSeparator();
+		igTextWrapped("You can click and drag the points to move them around, observing how the softbody deforms and reacts to your actions. Have fun!");
+		igSeparator();
 		igCheckbox("Show About", &show_about);
 	}
 	igEnd();
 
-	igShowDemoWindow(0);
-
 	static float pressure_plot_points[128] = {0};
 	static int pressure_plot_cycle = 0;
+
+	static float n = 2000.0f;
+	const float r = 8.31446261815324;
+	static float t = 293.15;
 
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
@@ -328,7 +332,7 @@ static void frame(void)
 	static int is_hitting = -1;
 	int is_hovering = -1;
 
-	if (is_hitting == -1)
+	if (is_hitting == -1 && !__io->WantCaptureMouse)
 	{
 		for (int i = 0; i < softbody.obj_count; i++)
 		{
@@ -370,25 +374,71 @@ static void frame(void)
 
 	static float acc = 0.0f;
 	float internal_pressure;
+	float area;
+	float nrt = n * r * t;
 
 	acc += __io->DeltaTime;
 	while (acc >= phys_dt)
 	{
-		integrate_softbody(phys_dt, &internal_pressure);
+		integrate_softbody(phys_dt, nrt, &internal_pressure, &area);
 		acc -= phys_dt;
 	}
 
 	pressure_plot_points[pressure_plot_cycle] = internal_pressure;
 	pressure_plot_cycle = (pressure_plot_cycle + 1) % IM_ARRAYSIZE(pressure_plot_points);
 
-	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f + 100.f, __io->DisplaySize.y / 2.0f + 100.f}, ImGuiCond_Once, (ImVec2){0, 0});
+	static bool show_total_force_lines = false;
+	static bool show_sp_force_lines = true;
+	static char buf[32];
+
+	ImVec2 avail;
+	float isp = igGetStyle()->ItemInnerSpacing.x;
+	igGetContentRegionAvail(&avail);
+
+	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f, __io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
-		char overlay[32];
-		sprintf(overlay, "Latest: %g", internal_pressure);
-		igPlotLines_FloatPtr("Pressure", pressure_plot_points, IM_ARRAYSIZE(pressure_plot_points), pressure_plot_cycle, overlay, __FLT_MIN__, __FLT_MAX__, (ImVec2){0.f, 120.f}, sizeof(float));
+		igSliderFloat("Moles (n)", &n, 100.f, 10000.f, "%g mol", 0);
+		igSliderFloat("Temperature (T)", &t, 100.f, 700.f, "%g K", 0);
+		igSeparator();
+		{
+			nice_box(FORMAT(buf, "n: %6.5g", n), IM_COL32(0, 0, 255, 255));
+			igSameLine(.0f, isp);
+			igText("*");
+			igSameLine(.0f, isp);
+			nice_box(FORMAT(buf, "R: %3g", r), IM_COL32(128, 0, 128, 255));
+			igSameLine(.0f, isp);
+			igText("*");
+			igSameLine(.0f, isp);
+			nice_box(FORMAT(buf, "T: %5.4g", t), IM_COL32(200, 145, 0, 255));
+			igSameLine(.0f, isp);
+			igText("=");
+			igSameLine(.0f, isp);
+			nice_box(FORMAT(buf, "nRT: %d", (int)nrt), IM_COL32(100, 160, 80, 255));
+		}
+		{
+			nice_box(FORMAT(buf, "P: %4.3g", internal_pressure), IM_COL32(200, 50, 0, 255));
+			igSameLine(.0f, isp);
+			igText("=");
+			igSameLine(.0f, isp);
+			nice_box(FORMAT(buf, "nRT: %d", (int)nrt), IM_COL32(100, 160, 80, 255));
+			igSameLine(.0f, isp);
+			igText("/");
+			igSameLine(.0f, isp);
+			nice_box(FORMAT(buf, "V: %d", (int)area), IM_COL32(200, 20, 40, 255));
+		}
+	}
+	igSeparator();
+	{
+		sprintf(buf, "Pressure: %8g", internal_pressure);
+		igPlotLines_FloatPtr(NULL, pressure_plot_points, IM_ARRAYSIZE(pressure_plot_points), pressure_plot_cycle, buf, __FLT_MIN__, __FLT_MAX__, (ImVec2){avail.x, 80.f}, sizeof(float));
+	}
+	igSeparator();
+	{
+		igCheckbox("Show Total Force Lines", &show_total_force_lines);
+		igCheckbox("Show Spring And Pressure Force Lines", &show_sp_force_lines);
 	}
 	igEnd();
 
@@ -429,9 +479,20 @@ static void frame(void)
 			arrow(m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 2.f, 10.f);
 		} */
 
-		// show_arrow(wc, vertex, vertex->gravity_force, 0.1f);
-		show_arrow(wc, vertex, vertex->spring_force, 0.01f);
-		show_arrow(wc, vertex, vertex->pressure_force, 0.01f);
+
+		if (!vertex->is_fixed)
+		{
+			if (show_sp_force_lines)
+			{
+				show_arrow(wc, vertex->pos, vertex->spring_force, 0.01f, IM_COL32(255, 255, 255, 80));
+				show_arrow(wc, vertex->pos, vertex->pressure_force, 0.01f, IM_COL32(255, 255, 255, 80));
+			}
+			if (show_total_force_lines)
+			{
+				ImVec2 total = m_vadd(m_vadd(vertex->gravity_force, vertex->spring_force), vertex->pressure_force);
+				show_arrow(wc, vertex->pos, total, 0.01f, IM_COL32(152,138,189, 255));
+			}
+		}
 
 		ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 4.f, IM_COL32_WHITE, 0);
 		if (is_hovering == i)
@@ -443,6 +504,13 @@ static void frame(void)
 			ImDrawList_AddCircleFilled(__dl, m_rct(wc, vertex->pos), 20.f, IM_COL32(255, 0, 0, 100), 0);
 		}
 	}
+
+	/* avg_center.x /= (float)softbody.obj_count;
+	avg_center.y /= (float)softbody.obj_count;
+	avg_force.x /= (float)softbody.obj_count;
+	avg_force.y /= (float)softbody.obj_count;
+
+	show_arrow(wc, avg_center, avg_force, 0.01f, IM_COL32(255, 255, 255, 255)); */
 
 	if (show_about)
 	{
