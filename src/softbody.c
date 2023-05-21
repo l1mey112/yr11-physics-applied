@@ -112,7 +112,7 @@ static void make_real_softbody(float mass, float stiffness, float damping)
 	}
 }
 
-static void integrate_softbody(float dt)
+static void integrate_softbody(float dt, float *out_internal_pressure)
 {
 	const float little_g = -9.8f * 80.f;
 
@@ -209,6 +209,7 @@ static void integrate_softbody(float dt)
 	area = fabs(area * 0.5);
 
 	float internal_pressure = nrt / area;
+	*out_internal_pressure = internal_pressure;
 
 	// --- perform ideal gas law
 	for (int i = 0; i < softbody.obj_count; i++)
@@ -316,6 +317,11 @@ static void frame(void)
 	}
 	igEnd();
 
+	igShowDemoWindow(0);
+
+	static float pressure_plot_points[128] = {0};
+	static int pressure_plot_cycle = 0;
+
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
 
@@ -363,13 +369,28 @@ static void frame(void)
 	// --- physics
 
 	static float acc = 0.0f;
+	float internal_pressure;
 
 	acc += __io->DeltaTime;
 	while (acc >= phys_dt)
 	{
-		integrate_softbody(phys_dt);
+		integrate_softbody(phys_dt, &internal_pressure);
 		acc -= phys_dt;
 	}
+
+	pressure_plot_points[pressure_plot_cycle] = internal_pressure;
+	pressure_plot_cycle = (pressure_plot_cycle + 1) % IM_ARRAYSIZE(pressure_plot_points);
+
+	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f + 100.f, __io->DisplaySize.y / 2.0f + 100.f}, ImGuiCond_Once, (ImVec2){0, 0});
+	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
+	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
+	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	{
+		char overlay[32];
+		sprintf(overlay, "Latest: %g", internal_pressure);
+		igPlotLines_FloatPtr("Pressure", pressure_plot_points, IM_ARRAYSIZE(pressure_plot_points), pressure_plot_cycle, overlay, __FLT_MIN__, __FLT_MAX__, (ImVec2){0.f, 120.f}, sizeof(float));
+	}
+	igEnd();
 
 	// --- render
 

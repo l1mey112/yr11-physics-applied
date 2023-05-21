@@ -37,6 +37,8 @@ typedef unsigned __int64 ImU64;
 //typedef unsigned long long ImU64;
 #endif
 
+#define IM_ARRAYSIZE(_ARR)          ((int)(sizeof(_ARR) / sizeof(*(_ARR))))     // Size of a static C-style array. Don't use on pointers!
+
 // Helpers macros to generate 32-bit encoded colors
 // User can declare their own format by #defining the 5 _SHIFT/_MASK macros in their imconfig file.
 #ifndef IM_COL32_R_SHIFT
