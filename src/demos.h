@@ -346,7 +346,7 @@ static ImVec2 HANDLE_PAN()
 {
 	ImVec2 canvas_sz = __io->DisplaySize;
 
-	if (igIsMouseDragging(ImGuiMouseButton_Right, 0.f))
+	if (igIsMouseDragging(ImGuiMouseButton_Right, 0.f) || igIsMouseDragging(ImGuiMouseButton_Middle, 0.f))
 	{
 #ifndef HANDLE_PAN_NO_X
 		__delta_scroll.x += __io->MouseDelta.x;
