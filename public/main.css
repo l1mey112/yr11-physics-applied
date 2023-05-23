@@ -99,7 +99,7 @@ nav.breadcrumbs .fleuron {
 
 h1 {
 	padding-bottom: calc(1.25rem * 0.5);
-	border-bottom: 1px solid #edebe8;
+	/* border-bottom: 1px solid #edebe8; */
 	line-height: 1;
 }
 
