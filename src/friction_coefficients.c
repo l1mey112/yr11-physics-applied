@@ -114,7 +114,7 @@ static bool show_about = true;
 
 static void frame(void)
 {
-	FRAME_PASS_BEGIN
+	FRAME_PASS_BEGIN;
 
 	ImVec2 wc = HANDLE_PAN();
 
@@ -214,5 +214,5 @@ static void frame(void)
 		ABOUT_WIDGET();
 	}
 
-	FRAME_PASS_END
+	FRAME_PASS_END;
 }

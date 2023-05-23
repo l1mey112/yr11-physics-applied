@@ -172,7 +172,7 @@ static void tip_to_tail_pairs(ImDrawList *__dl, const ImVec2 world_center, const
 
 static void frame(void)
 {
-	FRAME_PASS_BEGIN
+	FRAME_PASS_BEGIN;
 
 	ImVec2 world_center = HANDLE_PAN();
 	RENDER_GRID(world_center);
@@ -319,5 +319,5 @@ static void frame(void)
 		ABOUT_WIDGET();
 	}
 
-	FRAME_PASS_END
+	FRAME_PASS_END;
 }

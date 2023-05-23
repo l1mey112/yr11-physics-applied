@@ -37,7 +37,7 @@ static void init2(void)
 
 static void frame(void)
 {
-	FRAME_PASS_BEGIN
+	FRAME_PASS_BEGIN;
 
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
@@ -152,5 +152,5 @@ static void frame(void)
 		ABOUT_WIDGET();
 	}
 
-	FRAME_PASS_END
+	FRAME_PASS_END;
 }

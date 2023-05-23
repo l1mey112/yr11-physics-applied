@@ -63,7 +63,7 @@ static ImVec2 wave_point(ImVec2 wc, float y_diff, float x_pos, float amplitude, 
 
 static void frame(void)
 {
-	FRAME_PASS_BEGIN
+	FRAME_PASS_BEGIN;
 
 	static bool freeze = false;
 	static bool show_arrows = true;
@@ -179,5 +179,5 @@ static void frame(void)
 		ABOUT_WIDGET();
 	}
 
-	FRAME_PASS_END
+	FRAME_PASS_END;
 }

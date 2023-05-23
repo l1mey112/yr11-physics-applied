@@ -83,7 +83,7 @@ void slice_rectangle(float x, float y, float width, float height, float angle, I
 
 static void frame(void)
 {
-	FRAME_PASS_BEGIN
+	FRAME_PASS_BEGIN;
 
 	ImVec2 wc = HANDLE_PAN();
 
@@ -141,5 +141,5 @@ static void frame(void)
 	ImDrawList_AddQuad(__dl, m_rct(wc, r0), m_rct(wc, r1), m_rct(wc, r2), m_rct(wc, r3), IM_COL32(255,255,255, 255), 1.f);
 
 	ABOUT_WIDGET();
-	FRAME_PASS_END
+	FRAME_PASS_END;
 }

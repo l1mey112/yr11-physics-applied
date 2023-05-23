@@ -31,11 +31,12 @@ struct Square
 	float radius;
 };
 
-#define SQUARE_DEFAULT \
-(Square){ \
-	.pos = {.x = 0.f, .y = 250.f}, \
-	.radius = 50.f, \
-}
+#define SQUARE_DEFAULT                 \
+	(Square)                           \
+	{                                  \
+		.pos = {.x = 0.f, .y = 250.f}, \
+		.radius = 50.f,                \
+	}
 
 static void frame(void)
 {
@@ -53,17 +54,20 @@ static void frame(void)
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
 
-	const float phys_dt = 1.f / 60.f; 
+	const float phys_dt = 1.f / 60.f;
 	static float acc = 0.f;
 	static Square square = SQUARE_DEFAULT;
 	static Square computed = SQUARE_DEFAULT;
 	static float yvel = 0.f;
 
 	// TODO: change computed to float value
-	if (computed.pos.y <= computed.radius) {
+	if (computed.pos.y <= computed.radius)
+	{
 		computed = square;
 		yvel = 0.f;
-	} else {
+	}
+	else
+	{
 		acc += __io->DeltaTime;
 		while (acc >= phys_dt)
 		{
@@ -93,7 +97,7 @@ static void frame(void)
 
 		if (igIsMouseHoveringRect(m_offset(rc, -square.radius, -square.radius), m_offset(rc, square.radius, square.radius), 0.f))
 		{
-			is_hitting =  true;
+			is_hitting = true;
 		}
 	}
 
@@ -118,7 +122,8 @@ static void frame(void)
 		is_hitting = false;
 	}
 
-	ImU32 col = is_hovering ? IM_COL32(255, 255, 255, 80) : is_hitting ? IM_COL32(255, 0, 0, 100) : IM_COL32(231, 184, 63, 255);
+	ImU32 col = is_hovering ? IM_COL32(255, 255, 255, 80) : is_hitting ? IM_COL32(255, 0, 0, 100)
+																	   : IM_COL32(231, 184, 63, 255);
 
 	ImDrawList_AddRectFilled(__dl, m_rct(wc, m_offset(computed.pos, computed.radius, computed.radius)), m_rct(wc, m_offset(computed.pos, -computed.radius, -computed.radius)), col, 0.f, 0);
 

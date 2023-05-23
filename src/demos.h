@@ -254,21 +254,27 @@ sapp_desc sokol_main(int argc, char *argv[])
 	};
 }
 
-#define FRAME_PASS_BEGIN                     \
-	simgui_new_frame(&(simgui_frame_desc_t){ \
-		.width = sapp_width(),               \
-		.height = sapp_height(),             \
-		.delta_time = sapp_frame_duration(), \
-		.dpi_scale = sapp_dpi_scale(),       \
-	});                                      \
-	__dl = igGetBackgroundDrawList_Nil();    \
-	__io = igGetIO();
+#define FRAME_PASS_BEGIN                         \
+	do                                           \
+	{                                            \
+		simgui_new_frame(&(simgui_frame_desc_t){ \
+			.width = sapp_width(),               \
+			.height = sapp_height(),             \
+			.delta_time = sapp_frame_duration(), \
+			.dpi_scale = sapp_dpi_scale(),       \
+		});                                      \
+		__dl = igGetBackgroundDrawList_Nil();    \
+		__io = igGetIO();                        \
+	} while (0)
 
-#define FRAME_PASS_END                                                      \
-	sg_begin_default_pass(&state.pass_action, sapp_width(), sapp_height()); \
-	simgui_render();                                                        \
-	sg_end_pass();                                                          \
-	sg_commit();
+#define FRAME_PASS_END                                                          \
+	do                                                                          \
+	{                                                                           \
+		sg_begin_default_pass(&state.pass_action, sapp_width(), sapp_height()); \
+		simgui_render();                                                        \
+		sg_end_pass();                                                          \
+		sg_commit();                                                            \
+	} while (0)
 
 static void ABOUT_WIDGET()
 {
@@ -381,29 +387,28 @@ static void arrow(ImVec2 start, ImVec2 end, ImU32 color, float thickness, float 
 	ImDrawList_AddTriangleFilled(__dl, end, p1, p2, color);
 }
 
-void nice_box(const char* label, ImU32 col)
+void nice_box(const char *label, ImU32 col)
 {
-    ImGuiStyle *style = &GImGui->Style;
-    ImVec2 label_size;
+	ImGuiStyle *style = &GImGui->Style;
+	ImVec2 label_size;
 
 	igCalcTextSize(&label_size, label, NULL, true, -1.0f);
 
-    ImVec2 pos = igGetCurrentWindow()->DC.CursorPos;
-    ImVec2 size = {label_size.x + style->FramePadding.x * 2.0f, label_size.y + style->FramePadding.y * 2.0f};
+	ImVec2 pos = igGetCurrentWindow()->DC.CursorPos;
+	ImVec2 size = {label_size.x + style->FramePadding.x * 2.0f, label_size.y + style->FramePadding.y * 2.0f};
 
-    const ImRect bb = {pos, (ImVec2){pos.x + size.x, pos.y + size.y}};
-    igItemSize_Vec2(size, style->FramePadding.y);
+	const ImRect bb = {pos, (ImVec2){pos.x + size.x, pos.y + size.y}};
+	igItemSize_Vec2(size, style->FramePadding.y);
 
-    igRenderFrame(bb.Min, bb.Max, col, true, style->FrameRounding);
+	igRenderFrame(bb.Min, bb.Max, col, true, style->FrameRounding);
 
 	ImVec2 pmin = {bb.Min.x + style->FramePadding.x, bb.Min.y + style->FramePadding.y};
 	ImVec2 pmax = {bb.Max.x - style->FramePadding.x, bb.Max.y - style->FramePadding.y};
 
-    igRenderTextClipped(pmin, pmax, label, NULL, &label_size, style->ButtonTextAlign, &bb);
+	igRenderTextClipped(pmin, pmax, label, NULL, &label_size, style->ButtonTextAlign, &bb);
 }
 
 #define FORMAT(buffer, format, ...) \
-    (snprintf((buffer), sizeof(buffer), (format), __VA_ARGS__), (buffer))
-
+	(snprintf((buffer), sizeof(buffer), (format), __VA_ARGS__), (buffer))
 
 #endif // DEMOS_H
