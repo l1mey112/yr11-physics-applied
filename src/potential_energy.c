@@ -57,13 +57,12 @@ static void frame(void)
 	const float phys_dt = 1.f / 60.f;
 	static float acc = 0.f;
 	static Square square = SQUARE_DEFAULT;
-	static Square computed = SQUARE_DEFAULT;
+	static float ypos = 250.f;
 	static float yvel = 0.f;
 
-	// TODO: change computed to float value
-	if (computed.pos.y <= computed.radius)
+	if (ypos <= square.radius)
 	{
-		computed = square;
+		ypos = square.pos.y;
 		yvel = 0.f;
 	}
 	else
@@ -71,16 +70,13 @@ static void frame(void)
 		acc += __io->DeltaTime;
 		while (acc >= phys_dt)
 		{
-			yvel += 200 * phys_dt;
-			computed.pos.y -= yvel * phys_dt;
+			yvel += 490 * phys_dt;
+			ypos -= yvel * phys_dt;
 			acc -= phys_dt;
 		}
 	}
 
-	Square project = {
-		.pos = {.x = square.pos.x, .y = square.radius},
-		.radius = square.radius,
-	};
+	float yproject = square.radius;
 
 	// float m = 100.f;
 	// float square_pot = m * 9.8 * (square.pos.y - square.radius);
@@ -109,7 +105,7 @@ static void frame(void)
 			if (square.pos.y < square.radius)
 				square.pos.y = square.radius;
 
-			computed = square;
+			ypos = square.pos.y;
 			yvel = 0.f;
 		}
 	}
@@ -125,14 +121,13 @@ static void frame(void)
 	ImU32 col = is_hovering ? IM_COL32(255, 255, 255, 80) : is_hitting ? IM_COL32(255, 0, 0, 100)
 																	   : IM_COL32(231, 184, 63, 255);
 
-	ImDrawList_AddRectFilled(__dl, m_rct(wc, m_offset(computed.pos, computed.radius, computed.radius)), m_rct(wc, m_offset(computed.pos, -computed.radius, -computed.radius)), col, 0.f, 0);
-
+	ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(square.pos.x + square.radius, ypos + square.radius)), m_rct(wc, Vec2(square.pos.x - square.radius, ypos - square.radius)), col, 0.f, 0);
 	ImDrawList_AddRect(__dl, m_rct(wc, m_offset(square.pos, square.radius, square.radius)), m_rct(wc, m_offset(square.pos, -square.radius, -square.radius)), IM_COL32(255, 255, 255, 255), 0.f, 0, 0.f);
-	ImDrawList_AddRect(__dl, m_rct(wc, m_offset(project.pos, project.radius, project.radius)), m_rct(wc, m_offset(project.pos, -project.radius, -project.radius)), IM_COL32(255, 255, 255, 255), 0.f, 0, 0.f);
+	ImDrawList_AddRect(__dl, m_rct(wc, Vec2(square.pos.x + square.radius, yproject + square.radius)), m_rct(wc, Vec2(square.pos.x - square.radius, yproject - square.radius)), IM_COL32(255, 255, 255, 255), 0.f, 0, 0.f);
 
-	// ImDrawList_AddCircleFilled(__dl, m_rct(wc, square.pos), 4.f, IM_COL32(255, 255, 255, 255), 0);
-	// ImDrawList_AddCircleFilled(__dl, m_rct(wc, project.pos), 4.f, IM_COL32(255, 255, 255, 255), 0);
-	// ImDrawList_AddLine(__dl, m_rct(wc, square.pos), m_rct(wc, project.pos), IM_COL32(255, 255, 255, 255), 2.f);
+	ImDrawList_AddCircleFilled(__dl, m_rct(wc, square.pos), 4.f, IM_COL32(255, 255, 255, 255), 0);
+	ImDrawList_AddCircleFilled(__dl, m_rct(wc, Vec2(square.pos.x, yproject)), 4.f, IM_COL32(255, 255, 255, 255), 0);
+	ImDrawList_AddLine(__dl, m_rct(wc, square.pos), m_rct(wc, Vec2(square.pos.x, yproject)), IM_COL32(255, 255, 255, 255), 0.f);
 
 	if (show_about)
 	{

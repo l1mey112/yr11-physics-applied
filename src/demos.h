@@ -34,6 +34,11 @@
 #include "HandmadeMath.h"
 #include <emscripten.h>
 
+static inline ImVec2 Vec2(float x, float y)
+{
+	return (ImVec2){x, y};
+}
+
 #define M_TAU (2 * M_PI)
 #define DEG_TO_RAD (M_PI / 180.f)
 #define RAD_TO_DEG (180.f / M_PI)
