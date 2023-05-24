@@ -32,7 +32,7 @@ struct Square
 };
 
 #define DEFAULT_HEIGHT 500.f
-#define DEFAULT_TIMER 1.5f
+#define DEFAULT_TIMER 0.8f
 
 #define SQUARE_DEFAULT                 \
 	(Square)                           \
@@ -132,8 +132,8 @@ static void frame(void)
 
 	static char buf[128];
 
-	float total_gpot = m * g * square.pos.y;
-	float h = ypos;
+	float total_gpot = m * g * (square.pos.y - square.radius);
+	float h = ypos - square.radius;
 	float gpot = m * g * h;
 
 	float isp = igGetStyle()->ItemInnerSpacing.x;
@@ -186,7 +186,7 @@ static void frame(void)
 	// ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(offset_x, yproject)), m_rct(wc, Vec2(offset_x + 10.f, ypos)), IM_COL32(140, 0, 130, 255), 0.f, 0);
 
 	float total_gpot_r = m * g * (square.pos.y - square.radius);
-	float gpot_r = m * g * (h - square.radius);
+	float gpot_r = m * g * (ypos - square.radius);
 
 	float ygpot_max = square.pos.y + square.radius;
 	float ygpot = (gpot_r / total_gpot_r) * ygpot_max;
