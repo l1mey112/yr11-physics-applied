@@ -22,6 +22,7 @@ clean:
 	find public/ \
 		! -name 'index.html' \
 		! -name 'main.css' \
+		! -name 'jl.svg' \
 		-type f -exec rm -f {} +
 	rm -rf build/
 
