@@ -31,7 +31,8 @@ struct Square
 	float radius;
 };
 
-#define DEFAULT_HEIGHT 400.f
+#define DEFAULT_HEIGHT 500.f
+#define DEFAULT_TIMER 1.5f
 
 #define SQUARE_DEFAULT                 \
 	(Square)                           \
@@ -40,9 +41,12 @@ struct Square
 		.radius = 50.f,                \
 	}
 
+static bool run_once = true;
+
 static void frame(void)
 {
 	FRAME_PASS_BEGIN;
+	MOVE_UP_Y(3.f);
 
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
@@ -61,29 +65,35 @@ static void frame(void)
 	static Square square = SQUARE_DEFAULT;
 	static float ypos = DEFAULT_HEIGHT;
 	static float yvel = 0.f;
+	static float yvel_real = 0.f;
+	static float yfall_timer = 0.f;
+
+	static float g = 9.8;
+	static float m = 100.f;
 
 	acc += __io->DeltaTime;
-	while (acc >= phys_dt && ypos > square.radius)
+	while (acc >= phys_dt)
 	{
-		yvel += 490 * phys_dt;
-		ypos -= yvel * phys_dt;
+		if (yfall_timer > 0.f) {
+			yfall_timer -= phys_dt;
+
+			if (yfall_timer <= 0.f) ypos = square.pos.y;
+		} else if (ypos > square.radius) {
+			yvel += g * 25 * phys_dt;
+			yvel_real += g * phys_dt;
+			ypos -= yvel * phys_dt;
+
+			if (ypos < square.radius) {
+				yvel = 0.f;
+				yvel_real = 0.f;
+				ypos = square.radius;
+				yfall_timer = 2.f;
+			}
+		}
 		acc -= phys_dt;
 	}
 
-	if (ypos <= square.radius)
-	{
-		ypos = square.pos.y;
-		yvel = 0.f;
-	}
-
 	float yproject = square.radius;
-
-	float m = 100.f;
-	// float square_pot = m * 9.8 * (square.pos.y - square.radius);
-
-	// float height = square.pos.y - project.pos.y;
-
-	// igText("pot: %d", (int)square_pot);
 
 	static bool is_hitting = false;
 	bool is_hovering = false;
@@ -105,8 +115,10 @@ static void frame(void)
 			if (square.pos.y < square.radius)
 				square.pos.y = square.radius;
 
+			yfall_timer = 0.f;
 			ypos = square.pos.y;
 			yvel = 0.f;
+			yvel_real = 0.f;
 		}
 	}
 	else
@@ -118,26 +130,71 @@ static void frame(void)
 		is_hitting = false;
 	}
 
+	static char buf[128];
+
+	float total_gpot = m * g * square.pos.y;
+	float h = ypos;
+	float gpot = m * g * h;
+
+	float isp = igGetStyle()->ItemInnerSpacing.x;
+
+	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f + 100.f, __io->DisplaySize.y / 2.0f + 100.f}, ImGuiCond_Once, (ImVec2){0, 0});
+	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
+	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
+	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	{
+		igSliderFloat("Mass (m)", &m, 10.f, 1000.f, "%g kg", ImGuiSliderFlags_AlwaysClamp);
+		igSliderFloat("Gravity (g)", &g, 0.05f, 100.f, "%g m/s^2", ImGuiSliderFlags_AlwaysClamp);
+	}
+	igSeparator();
+	{
+		nice_box(FORMAT(buf, "m: %6.5g", m), IM_COL32(0, 0, 255, 255));
+		igSameLine(.0f, isp);
+		igText("*");
+		igSameLine(.0f, isp);
+		nice_box(FORMAT(buf, "g: %3g", g), IM_COL32(100, 160, 80, 255));
+		igSameLine(.0f, isp);
+		igText("*");
+		igSameLine(.0f, isp);
+		nice_box(FORMAT(buf, "h: %5.4g", h), IM_COL32(200, 145, 0, 255));
+		igSameLine(.0f, isp);
+		igText("=");
+		igSameLine(.0f, isp);
+		nice_box(FORMAT(buf, "U: %d", (int)gpot), IM_COL32(140, 0, 130, 255));
+		
+	}
+	igSeparator();
+	{
+		igText("%gJ", 0.5f * m * (yvel_real * yvel_real));
+		igText("%gJ", gpot);
+	}
+	igEnd();
+
 	ImU32 col = is_hovering	 ? IM_COL32(255, 255, 255, 80)
 				: is_hitting ? IM_COL32(255, 0, 0, 100)
 							 : IM_COL32(231, 184, 63, 255);
 
 	// ImDrawList_AddRectFilledMultiColor()
 
-	float total_gpot = m * 9.8 * (square.pos.y - square.radius);
-	float gpot = m * 9.8 * (ypos - square.radius);
-
 	// igText("total gpot: %g", );
 	// igText("current gpot: %g", );
 
-	static char buf[128];
-
 	float offset_x = square.pos.x + square.radius + 10.f;
+	float offset_x2 = square.pos.x - square.radius - 50.f;
 
-	ImDrawList_AddText_Vec2(__dl, m_rct(wc, Vec2(offset_x + 20.f, ypos)), IM_COL32_WHITE, FORMAT(buf, "U = %gJ", gpot), NULL);
+	// ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(offset_x, square.pos.y)), m_rct(wc, Vec2(offset_x + 10.f, ypos)), IM_COL32(255, 133, 0, 255), 0.f, 0);
+	// ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(offset_x, yproject)), m_rct(wc, Vec2(offset_x + 10.f, ypos)), IM_COL32(140, 0, 130, 255), 0.f, 0);
 
-	ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(offset_x, square.pos.y)), m_rct(wc, Vec2(offset_x + 10.f, ypos)), IM_COL32(255, 133, 0, 255), 0.f, 0);
-	ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(offset_x, yproject)), m_rct(wc, Vec2(offset_x + 10.f, ypos)), IM_COL32(140, 0, 130, 255), 0.f, 0);
+	float total_gpot_r = m * g * (square.pos.y - square.radius);
+	float gpot_r = m * g * (h - square.radius);
+
+	float ygpot_max = square.pos.y + square.radius;
+	float ygpot = (gpot_r / total_gpot_r) * ygpot_max;
+	ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(offset_x2, 0.f)), m_rct(wc, Vec2(offset_x2 - 10.f, ygpot)), IM_COL32(140, 0, 130, 255), 0.f, 0);
+	ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(offset_x2 - 20.f, 0.f)), m_rct(wc, Vec2(offset_x2 - 30.f, ygpot_max - ygpot)), IM_COL32(255, 133, 0, 255), 0.f, 0);
+
+	ImDrawList_AddText_Vec2(__dl, m_rct(wc, Vec2(offset_x + 20.f, ygpot_max - ygpot + 15.f)), IM_COL32_WHITE, FORMAT(buf, "K = %gJ", total_gpot - gpot), NULL);
+	ImDrawList_AddText_Vec2(__dl, m_rct(wc, Vec2(offset_x + 20.f, ygpot + 15.f)), IM_COL32_WHITE, FORMAT(buf, "U = %gJ", gpot), NULL);
 
 	ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(square.pos.x + square.radius, ypos + square.radius)), m_rct(wc, Vec2(square.pos.x - square.radius, ypos - square.radius)), col, 0.f, 0);
 	ImDrawList_AddRect(__dl, m_rct(wc, m_offset(square.pos, square.radius, square.radius)), m_rct(wc, m_offset(square.pos, -square.radius, -square.radius)), IM_COL32(255, 255, 255, 255), 0.f, 0, 0.f);

@@ -301,6 +301,7 @@ static void show_arrow(ImVec2 wc, ImVec2 pos, ImVec2 force, float p, ImU32 col)
 static void frame(void)
 {
 	FRAME_PASS_BEGIN;
+	MOVE_UP_Y(4.f);
 
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);

@@ -5,3 +5,4 @@ public/*
 !public/main.css
 !public/jl.svg
 build.sh
+compile_flags.txt

@@ -376,6 +376,16 @@ static inline ImVec2 DELTA_SCROLL()
 	return __delta_scroll;
 }
 
+#define MOVE_UP_Y(v) \
+	do { \
+		static bool __run_once = true; \
+		if (__run_once) { \
+			__run_once = false; \
+			__delta_scroll.y += __io->DisplaySize.y / v; \
+		} \
+	} while(0)
+
+
 static void arrow(ImVec2 start, ImVec2 end, ImU32 color, float thickness, float sz)
 {
 	ImDrawList_AddLine(__dl, start, end, color, thickness);
