@@ -85,6 +85,11 @@ static inline ImVec2 m_vmuls(ImVec2 a, float b)
 	return (ImVec2){a.x * b, a.y * b};
 }
 
+static inline ImVec2 m_vflip(ImVec2 a)
+{
+	return (ImVec2){-a.x, -a.y};
+}
+
 static inline ImVec2 m_offset(ImVec2 a, float x, float y)
 {
 	return (ImVec2){a.x + x, a.y + y};

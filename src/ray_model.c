@@ -27,25 +27,26 @@ typedef struct Object Object;
 typedef struct Stroke Stroke;
 typedef struct Pointer Pointer;
 
-struct Pointer {
+struct Pointer
+{
 	ImVec2 pos;
 	float rot;
 };
 
-struct Object {
+struct Object
+{
 	ImVec2 pos;
 	float rot;
-	enum {
+	enum
+	{
 		MIRROR,
-		RECTANGLE,
 	} type;
-	union {
-		ImVec2 rect_hw; // RECTANGLE
-	};
 };
 
-struct Stroke {
-	enum {
+struct Stroke
+{
+	enum
+	{
 		BASIC,
 		ENDLESS, // end is a normalised vector
 	} type;
@@ -54,16 +55,63 @@ struct Stroke {
 
 static int pointers_len = 1;
 static Pointer pointers[8] = {
-	{.pos = {0.f, 0.f},},
+	{
+		.pos = {0.f, 0.f},
+	},
 };
 
 static int world_len = 1;
 static Object world[32] = {
-	{.pos = {100.f, 0.f}, .rot = (M_PI/2.f), .type = MIRROR},
+	{.pos = {300.f, 0.f}, .rot = M_PI / 4.0f, .type = MIRROR},
 };
 
 static int path_len = 0;
 static Stroke path[32];
+
+static ImVec2 nrm_angle(float rad)
+{
+	ImVec2 ret;
+	ret.x = cosf(rad);
+	ret.y = -sinf(rad);
+	return ret;
+}
+
+static ImVec2 screen_intersection(ImVec2 ro, ImVec2 rd)
+{
+	float in_x;
+	float in_y;
+
+	if (rd.x != 0.f)
+	{
+		if (rd.x > 0.f)
+			in_x = __io->DisplaySize.x;
+		else
+			in_x = 0.f;
+		in_y = ro.y + (in_x - ro.x) * rd.y / rd.x;
+	}
+	else
+	{
+		in_x = ro.x;
+		if (rd.y > 0.f)
+			in_y = __io->DisplaySize.y;
+		else
+			in_y = 0.f;
+	}
+
+	if (in_y >= 0.f && in_y <= __io->DisplaySize.y)
+	{
+		return (ImVec2){in_x, in_y};
+	}
+
+	if (rd.y > 0.f)
+		in_y = __io->DisplaySize.y;
+	else
+		in_y = 0.f;
+
+	in_x = ro.x + (in_y - ro.y) * rd.x / rd.y;
+
+	return (ImVec2){in_x, in_y};
+}
 
 // returns the amount of interesection points
 static int intersect(Object *o, ImVec2 *p1, ImVec2 *p2)
@@ -102,7 +150,8 @@ static void traceray(ImVec2 ro, ImVec2 rd)
 		float nsqy = p1.y - ro.y;
 		float nsq = nsqx * nsqx + nsqy * nsqy;
 
-		if (nsq < sq_distance) {
+		if (nsq < sq_distance)
+		{
 			sq_distance = nsq;
 			c_hit = o;
 			c_hit_p1 = p1;
@@ -110,7 +159,8 @@ static void traceray(ImVec2 ro, ImVec2 rd)
 		}
 	}
 
-	if (!c_hit) {
+	if (!c_hit)
+	{
 		Stroke stroke = {ENDLESS, ro, rd};
 		append_stroke(stroke);
 		return;
@@ -125,8 +175,7 @@ static void trace(Pointer *p)
 	ImVec2 ro, rd;
 
 	ro = p->pos;
-	rd.x = cosf(p->rot);
-	rd.y = sinf(p->rot);
+	rd = nrm_angle(p->rot);
 
 	traceray(ro, rd);
 }
@@ -139,22 +188,6 @@ static void recalculate()
 	{
 		trace(&pointers[p]);
 	}
-}
-
-static ImVec2 screen_intersection(ImVec2 ro, ImVec2 rd)
-{
-	float in_x;
-
-	if (rd.x != 0.f) {
-		if (rd.x > 0)
-			in_x = __io->DisplaySize.x;
-		else
-			in_x = 0.f;
-	} else {
-		
-	}
-
-	return ro;
 }
 
 static void frame(void)
@@ -172,6 +205,7 @@ static void frame(void)
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
 
+	pointers[0].rot += __io->DeltaTime;
 	recalculate();
 
 	for (int i = 0; i < pointers_len; i++)
@@ -183,10 +217,21 @@ static void frame(void)
 	{
 		Object *object = &world[i];
 
-		switch (object->type) {
+		switch (object->type)
+		{
 		case MIRROR:
-		case RECTANGLE:
+		{
+			const float MIRROR_HSPAN = 100.f;
+			
+			ImVec2 span = m_vmuls(nrm_angle(object->rot), MIRROR_HSPAN);
+			ImVec2 p1 = m_vadd(span, object->pos);
+			ImVec2 p2 = m_vadd(m_vflip(span), object->pos);
+
+			printf("(%f, %f) (%f, %f)\n", p1.x, p1.y, p2.x, p2.y);
+			
+			ImDrawList_AddLine(__dl, m_rct(wc, p1), m_rct(wc, p2), IM_COL32(255, 255, 255, 255), 2.f);
 			break;
+		}
 		}
 	}
 
@@ -194,24 +239,23 @@ static void frame(void)
 	{
 		Stroke *stroke = &path[i];
 
-		printf("[%d] %d (%f, %f) (%f, %f)\n", stroke->type, i, stroke->start.x, stroke->start.y, stroke->end.x, stroke->end.y);
+		// printf("[%d] %d (%f, %f) (%f, %f)\n", stroke->type, i, stroke->start.x, stroke->start.y, stroke->end.x, stroke->end.y);
 
 		ImVec2 start, end;
 
-		switch (stroke->type) {
-			case BASIC: {
-				start = m_rct(wc, stroke->start);
-				end = m_rct(wc, stroke->end);
-				break;
-			}
-			case ENDLESS: {
-				start = m_rct(wc, stroke->start);
-				end = screen_intersection(start, stroke->end);
-				break;
-			}
+		switch (stroke->type)
+		{
+		case BASIC:
+			start = m_rct(wc, stroke->start);
+			end = m_rct(wc, stroke->end);
+			break;
+		case ENDLESS:
+			start = m_rct(wc, stroke->start);
+			end = screen_intersection(start, stroke->end);
+			break;
 		}
 
-		ImDrawList_AddLine(__dl, start, end, IM_COL32_BLACK, 2.f);
+		ImDrawList_AddLine(__dl, start, end, IM_COL32(255, 255, 255, 255), 2.f);
 	}
 
 	if (show_about)
