@@ -142,7 +142,7 @@ static void integrate_softbody(float dt, float nrt, float *out_internal_pressure
 
 		ImVec2 fnet_dir = m_normalise(m_vsub(spring->a->pos, spring->b->pos));
 
-		float dot = m_dot(fnet_dir, m_vsub(spring->a->vel, spring->b->vel));
+		float dot = m_vdot(fnet_dir, m_vsub(spring->a->vel, spring->b->vel));
 		float damping_force = dot * spring->damping;
 
 		force += damping_force;
@@ -220,15 +220,15 @@ static void integrate_softbody(float dt, float nrt, float *out_internal_pressure
 		// F = pA
 		float force = internal_pressure * distance;
 
-		ImVec2 midpoint = m_midpoint(spring->a->pos, spring->b->pos);
-		ImVec2 opposite_midpoint = m_midpoint(opposite_spring->a->pos, opposite_spring->b->pos);
+		ImVec2 midpoint = m_vmidpoint(spring->a->pos, spring->b->pos);
+		ImVec2 opposite_midpoint = m_vmidpoint(opposite_spring->a->pos, opposite_spring->b->pos);
 		ImVec2 outward_vec = m_vsub(midpoint, opposite_midpoint);
 
 		ImVec2 nrm_dir = m_normalise(m_vsub(spring->b->pos, spring->a->pos));
 		nrm_dir = (ImVec2){nrm_dir.y, -nrm_dir.x};
 
 		// calculate the right normal vector
-		if (m_dot(nrm_dir, outward_vec) < 0.f)
+		if (m_vdot(nrm_dir, outward_vec) < 0.f)
 		{
 			nrm_dir.x *= -1;
 			nrm_dir.y *= -1;

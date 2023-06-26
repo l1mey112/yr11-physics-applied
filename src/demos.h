@@ -85,6 +85,16 @@ static inline ImVec2 m_vmuls(ImVec2 a, float b)
 	return (ImVec2){a.x * b, a.y * b};
 }
 
+static inline ImVec2 m_vdiv(ImVec2 a, ImVec2 b)
+{
+	return (ImVec2){a.x / b.x, a.y / b.y};
+}
+
+static inline ImVec2 m_vdivs(ImVec2 a, float b)
+{
+	return (ImVec2){a.x / b, a.y / b};
+}
+
 static inline ImVec2 m_vflip(ImVec2 a)
 {
 	return (ImVec2){-a.x, -a.y};
@@ -114,12 +124,12 @@ static inline ImVec2 m_normalise(ImVec2 a)
 	return a;
 }
 
-static inline float m_dot(ImVec2 a, ImVec2 b)
+static inline float m_vdot(ImVec2 a, ImVec2 b)
 {
 	return a.x * b.x + a.y * b.y;
 }
 
-static inline ImVec2 m_midpoint(ImVec2 a, ImVec2 b)
+static inline ImVec2 m_vmidpoint(ImVec2 a, ImVec2 b)
 {
 	return (ImVec2){
 		(a.x + b.x) / 2.f,
