@@ -31,13 +31,13 @@ struct Square
 	float radius;
 };
 
-#define DEFAULT_HEIGHT 500.f
-#define DEFAULT_TIMER 1.5f
+#define DEFAULT_HEIGHT 550.f
+#define DEFAULT_TIMER 0.5f
 
 #define SQUARE_DEFAULT                 \
 	(Square)                           \
 	{                                  \
-		.pos = {.x = 0.f, .y = DEFAULT_HEIGHT}, \
+		.pos = {.x = -50.f, .y = DEFAULT_HEIGHT}, \
 		.radius = 50.f,                \
 	}
 
@@ -53,6 +53,14 @@ static void frame(void)
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Hello Dear ImGui!", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
+		igTextWrapped("Welcome to the Sinusoidal Wave Simulation!");
+		igTextWrapped("This simulation allows you to visualise the transfer of energy as an object falls under the influence of gravity.");
+		igSeparator();
+		igTextWrapped("It allows you to control the initial position, mass, and gravity strength of an object.");
+		igTextWrapped("By clicking and dragging at the top point, you can set the starting position.");
+		igSeparator();
+		igTextWrapped("As the object falls, you can observe the transfer of potential energy to kinetic energy. Adjusting the mass and gravity helps you explore different energy scenarios.");
+		igSeparator();
 		igCheckbox("Show About", &show_about);
 	}
 	igEnd();
@@ -132,13 +140,21 @@ static void frame(void)
 
 	static char buf[128];
 
-	float total_gpot = m * g * square.pos.y;
-	float h = ypos;
+	static float ticks[256];
+	static int ticks_cycle = 0;
+
+	float total_gpot = m * g * (square.pos.y - square.radius);
+	float h = ypos - square.radius;
 	float gpot = m * g * h;
 
-	float isp = igGetStyle()->ItemInnerSpacing.x;
+	ticks[ticks_cycle] = gpot;
+	ticks_cycle = (ticks_cycle + 1) % IM_ARRAYSIZE(ticks);
 
-	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f + 100.f, __io->DisplaySize.y / 2.0f + 100.f}, ImGuiCond_Once, (ImVec2){0, 0});
+	ImVec2 avail;
+	float isp = igGetStyle()->ItemInnerSpacing.x;
+	igGetContentRegionAvail(&avail);
+
+	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f + 100.f, __io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
@@ -148,25 +164,23 @@ static void frame(void)
 	}
 	igSeparator();
 	{
-		nice_box(FORMAT(buf, "m: %6.5g", m), IM_COL32(0, 0, 255, 255));
+		nice_box(FORMAT(buf, "m: %5.4g", m), IM_COL32(0, 0, 255, 255));
 		igSameLine(.0f, isp);
 		igText("*");
 		igSameLine(.0f, isp);
-		nice_box(FORMAT(buf, "g: %3g", g), IM_COL32(100, 160, 80, 255));
+		nice_box(FORMAT(buf, "g: %4.3g", g), IM_COL32(100, 160, 80, 255));
 		igSameLine(.0f, isp);
 		igText("*");
 		igSameLine(.0f, isp);
-		nice_box(FORMAT(buf, "h: %5.4g", h), IM_COL32(200, 145, 0, 255));
+		nice_box(FORMAT(buf, "h: %4.3g", h), IM_COL32(209,115,185, 255));
 		igSameLine(.0f, isp);
 		igText("=");
 		igSameLine(.0f, isp);
-		nice_box(FORMAT(buf, "U: %d", (int)gpot), IM_COL32(140, 0, 130, 255));
-		
+		nice_box(FORMAT(buf, "U: %8dJ", (int)gpot), IM_COL32(140, 0, 130, 255));
 	}
 	igSeparator();
 	{
-		igText("%gJ", 0.5f * m * (yvel_real * yvel_real));
-		igText("%gJ", gpot);
+		igPlotLines_FloatPtr(NULL, ticks, IM_ARRAYSIZE(ticks), ticks_cycle, FORMAT(buf, "U: %dJ", (int)gpot), __FLT_MIN__, __FLT_MAX__, (ImVec2){avail.x, 80.f}, sizeof(float));
 	}
 	igEnd();
 
@@ -186,7 +200,7 @@ static void frame(void)
 	// ImDrawList_AddRectFilled(__dl, m_rct(wc, Vec2(offset_x, yproject)), m_rct(wc, Vec2(offset_x + 10.f, ypos)), IM_COL32(140, 0, 130, 255), 0.f, 0);
 
 	float total_gpot_r = m * g * (square.pos.y - square.radius);
-	float gpot_r = m * g * (h - square.radius);
+	float gpot_r = m * g * (ypos - square.radius);
 
 	float ygpot_max = square.pos.y + square.radius;
 	float ygpot = (gpot_r / total_gpot_r) * ygpot_max;
