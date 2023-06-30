@@ -6,7 +6,8 @@ CFLAGS =
 FCFLAGS =
 
 ifeq ($(PROD),1)
-	CFLAGS += -Oz --closure=1 -flto
+# --closure=1 - breaking stuff
+	CFLAGS += -Oz -flto
 	FCFLAGS += -sMINIFY_HTML -sEVAL_CTORS=2
 endif
 
