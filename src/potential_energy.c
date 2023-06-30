@@ -19,9 +19,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#define USE_INIT2
 #include "demos.h"
 
-static bool show_about = true;
+static bool show_about;
+static float g;
+static float m;
+
+LOCAL_STORAGE_INIT(bool, show_about, true);
+LOCAL_STORAGE_INIT(float, g, 9.8);
+LOCAL_STORAGE_INIT(float, m, 100.0);
+
+static void init2(void)
+{
+	show_about = LOCAL_STORAGE_GET(show_about);
+	g = LOCAL_STORAGE_GET(g);
+	m = LOCAL_STORAGE_GET(m);
+}
 
 typedef struct Square Square;
 
@@ -41,8 +55,6 @@ struct Square
 		.radius = 50.f,                \
 	}
 
-static bool run_once = true;
-
 static void frame(void)
 {
 	FRAME_PASS_BEGIN;
@@ -61,7 +73,8 @@ static void frame(void)
 		igSeparator();
 		igTextWrapped("As the object falls, you can observe the transfer of potential energy to kinetic energy. Adjusting the mass and gravity helps you explore different energy scenarios.");
 		igSeparator();
-		igCheckbox("Show About", &show_about);
+		if (igCheckbox("Show About", &show_about))
+			LOCAL_STORAGE_SET(show_about, show_about);
 	}
 	igEnd();
 
@@ -75,9 +88,6 @@ static void frame(void)
 	static float yvel = 0.f;
 	static float yvel_real = 0.f;
 	static float yfall_timer = 0.f;
-
-	static float g = 9.8;
-	static float m = 100.f;
 
 	acc += __io->DeltaTime;
 	while (acc >= phys_dt)
@@ -159,8 +169,10 @@ static void frame(void)
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
-		igSliderFloat("Mass (m)", &m, 10.f, 1000.f, "%g kg", ImGuiSliderFlags_AlwaysClamp);
-		igSliderFloat("Gravity (g)", &g, 0.05f, 100.f, "%g m/s^2", ImGuiSliderFlags_AlwaysClamp);
+		if (igSliderFloat("Mass (m)", &m, 10.f, 1000.f, "%g kg", ImGuiSliderFlags_AlwaysClamp))
+			LOCAL_STORAGE_SET(m, m);
+		if (igSliderFloat("Gravity (g)", &g, 0.05f, 100.f, "%g m/s^2", ImGuiSliderFlags_AlwaysClamp))
+			LOCAL_STORAGE_SET(g, g);
 	}
 	igSeparator();
 	{

@@ -19,7 +19,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#define USE_INIT2
 #include "demos.h"
+
+static bool show_about;
+static float mass;
+static float f_applied;
+static float static_coefficient;
+static float kinetic_coefficient;
+static int item_curr;
+
+LOCAL_STORAGE_INIT(bool, show_about, true);
+LOCAL_STORAGE_INIT(float, mass, 5.0);
+LOCAL_STORAGE_INIT(float, f_applied, 20.0);
+LOCAL_STORAGE_INIT(float, static_coefficient, 0.0);
+LOCAL_STORAGE_INIT(float, kinetic_coefficient, 0.0);
+LOCAL_STORAGE_INIT(int, item_curr, 0);
+
+static void init2(void)
+{
+	show_about = LOCAL_STORAGE_GET(show_about);
+	mass = LOCAL_STORAGE_GET(mass);
+	f_applied = LOCAL_STORAGE_GET(f_applied);
+	static_coefficient = LOCAL_STORAGE_GET(static_coefficient);
+	kinetic_coefficient = LOCAL_STORAGE_GET(kinetic_coefficient);
+	item_curr = LOCAL_STORAGE_GET(item_curr);
+}
 
 #define OBJ_HALF_X 100.f
 #define OBJ_HALF_Y 50.f
@@ -110,20 +135,14 @@ static void object_force_side(ImVec2 wc, Object *obj, int dir, float mag, ImU32 
 
 static Object g_obj = {.pos = {0.f, 50.f}};
 
-static bool show_about = true;
-
 static void frame(void)
 {
 	FRAME_PASS_BEGIN;
 
 	ImVec2 wc = HANDLE_PAN();
 
-	static float mass = 5.f;
-	static float f_applied = 20.f;
 	const float little_g = 9.8f;
 	const float f_normal = little_g * mass;
-	static float static_coefficient = 0.f;
-	static float kinetic_coefficient = 0.f;
 
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
@@ -137,30 +156,41 @@ static void frame(void)
 	igSeparator();
 	igTextWrapped("An interactive free body diagram of an object at rest is shown. Change properties such as it's mass and applied force using the control window.");
 	igTextWrapped("The static and kinetic friction coefficents can be edited. A progress bar showing the force required to overpower the max static friction is underneath.");
-	igCheckbox("Show About", &show_about);
+	if (igCheckbox("Show About", &show_about))
+		LOCAL_STORAGE_SET(show_about, show_about);
 	igEnd();
 
 	igSetNextWindowPos((ImVec2){__io->DisplaySize.x / 2.0f, __io->DisplaySize.y / 2.0f}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	igSliderFloat("Mass", &mass, 0.1f, 25.f, "%g kg", ImGuiSliderFlags_AlwaysClamp);
-	igSliderFloat("Applied Force", &f_applied, 1.f, 100.f, "%g N", ImGuiSliderFlags_AlwaysClamp);
+	if (igSliderFloat("Mass", &mass, 0.1f, 25.f, "%g kg", ImGuiSliderFlags_AlwaysClamp))
+		LOCAL_STORAGE_SET(mass, mass);
+	if (igSliderFloat("Applied Force", &f_applied, 1.f, 100.f, "%g N", ImGuiSliderFlags_AlwaysClamp))
+		LOCAL_STORAGE_SET(f_applied, f_applied);
 	igSeparator();
 	{
 		const char* items[] = { "Fictional object", "Rubber on concrete", "Shoes on wood", "Steel on ice" };
 		const float static_coefficents[] = { 0.6f, 1.0f, 0.9f, 0.4f };
 		const float kinetic_coefficents[] = { 0.4f, 0.7f, 0.7f, 0.02f };
-		static int item_curr = 0;
 		if (item_curr != -1) {
 			static_coefficient = static_coefficents[item_curr];
 			kinetic_coefficient = kinetic_coefficents[item_curr];
+			LOCAL_STORAGE_SET(static_coefficient, static_coefficient);
+			LOCAL_STORAGE_SET(kinetic_coefficient, kinetic_coefficient);
 		}
-		if (igSliderFloat("Static Friction", &static_coefficient, 0.f, 1.f, "%g us", ImGuiSliderFlags_AlwaysClamp))
+		if (igSliderFloat("Static Friction", &static_coefficient, 0.f, 1.f, "%g us", ImGuiSliderFlags_AlwaysClamp)) {
+			LOCAL_STORAGE_SET(static_coefficient, static_coefficient);
+			LOCAL_STORAGE_SET(item_curr, item_curr);
 			item_curr = -1;
-		if (igSliderFloat("Kinetic Friction", &kinetic_coefficient, 0.f, 1.f, "%g uk", ImGuiSliderFlags_AlwaysClamp))
+		}
+		if (igSliderFloat("Kinetic Friction", &kinetic_coefficient, 0.f, 1.f, "%g uk", ImGuiSliderFlags_AlwaysClamp)) {
+			LOCAL_STORAGE_SET(kinetic_coefficient, kinetic_coefficient);
+			LOCAL_STORAGE_SET(item_curr, item_curr);
 			item_curr = -1;
-		igCombo_Str_arr("Preset Coefficents", &item_curr, items, 4, 0);
+		}
+		if (igCombo_Str_arr("Preset Coefficents", &item_curr, items, 4, 0))
+			LOCAL_STORAGE_SET(item_curr, item_curr);
 	}
 
 	RENDER_GRID(wc);

@@ -441,4 +441,23 @@ void nice_box(const char *label, ImU32 col)
 #define FORMAT(buffer, format, ...) \
 	(snprintf((buffer), sizeof(buffer), (format), __VA_ARGS__), (buffer))
 
+#define LOCAL_STORAGE_GET(name) ({ local_storage_##name(); })
+#define LOCAL_STORAGE_SET(name, val) ({ local_storage_set_##name(val); })
+#define LOCAL_STORAGE_INIT0(...) EM_JS(__VA_ARGS__)
+#define LOCAL_STORAGE_INIT(type, name, _default)                      \
+    LOCAL_STORAGE_INIT0(type, local_storage_##name, (), {             \
+        let v;                                                        \
+        if (v = sessionStorage.getItem(__FILE__ + "_" + #name))       \
+            return v;                                                 \
+        return _default;                                              \
+    });                                                               \
+    LOCAL_STORAGE_INIT0(void, local_storage_set_##name, (type val), { \
+        sessionStorage.setItem(__FILE__ + "_" + #name, val)           \
+    })
+
+// TODO: impl later
+//
+// #define IMGUI_PERSISTENT_COLLAPSE_INIT(name) LOCAL_STORAGE_INIT(bool, name, false)
+// #define IMGUI_PERSISTENT_COLLAPSE(name) igSetNextWindowCollapsed(LOCAL_STORAGE_GET(name) || is_inside_iframe(), ImGuiCond_Once)
+
 #endif // DEMOS_H

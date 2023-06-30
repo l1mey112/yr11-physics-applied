@@ -19,7 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
  * SOFTWARE.
 */
+#define USE_INIT2
 #include "demos.h"
+
+static bool show_math;
+static bool show_about;
+
+LOCAL_STORAGE_INIT(bool, show_math, false);
+LOCAL_STORAGE_INIT(bool, show_about, true);
+
+static void init2(void)
+{
+	show_math = LOCAL_STORAGE_GET(show_math);
+	show_about = LOCAL_STORAGE_GET(show_about);
+}
 
 typedef struct
 {
@@ -36,9 +49,6 @@ static Point g_points[POINTS_CAP] = {
 	(Point){.pos = {244.f, 234.f}, .col = IM_COL32(100, 225, 100, 255)},
 };
 static int g_points_len = 4;
-
-static bool show_math = false;
-static bool show_about = true;
 
 static inline float norm_degrees(float a)
 {
@@ -296,8 +306,10 @@ static void frame(void)
 	}
 	igPopStyleColor(1);
 	igSeparator();
-	igCheckbox("Show Math Overlay", &show_math);
-	igCheckbox("Show About", &show_about);
+	if (igCheckbox("Show Math Overlay", &show_math))
+		LOCAL_STORAGE_SET(show_math, show_math);
+	if (igCheckbox("Show About", &show_about))
+		LOCAL_STORAGE_SET(show_about, show_about);
 	/* igSeparator();
 	{
 		Point last_point = g_points[0];

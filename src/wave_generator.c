@@ -19,9 +19,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#define USE_INIT2
 #include "demos.h"
 
-static bool show_about = true;
+static bool show_about;
+static bool freeze;
+static bool show_arrows;
+static float speed;
+static float amplitude;
+static float frequency;
+
+LOCAL_STORAGE_INIT(bool, show_about, true);
+LOCAL_STORAGE_INIT(bool, freeze, false);
+LOCAL_STORAGE_INIT(bool, show_arrows, true);
+LOCAL_STORAGE_INIT(float, speed, 200.0);
+LOCAL_STORAGE_INIT(float, amplitude, 200.0);
+LOCAL_STORAGE_INIT(float, frequency, 0.6);
+
+static void init2(void)
+{
+	show_about = LOCAL_STORAGE_GET(show_about);
+	freeze = LOCAL_STORAGE_GET(freeze);
+	show_arrows = LOCAL_STORAGE_GET(show_arrows);
+	speed = LOCAL_STORAGE_GET(speed);
+	amplitude = LOCAL_STORAGE_GET(amplitude);
+	frequency = LOCAL_STORAGE_GET(frequency);
+}
 
 static inline float ycord(float amplitude, float wavelength, float x)
 {
@@ -65,9 +88,6 @@ static void frame(void)
 {
 	FRAME_PASS_BEGIN;
 
-	static bool freeze = false;
-	static bool show_arrows = true;
-
 	igSetNextWindowPos((ImVec2){10, 10}, ImGuiCond_Once, (ImVec2){0, 0});
 	igSetNextWindowSize((ImVec2){400.f, 400.f}, ImGuiCond_Once);
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
@@ -85,20 +105,19 @@ static void frame(void)
 		igTextWrapped("The Wavelength (lambda) is computed by dividing it's wave velocity by it's frequency.");
 		igTextWrapped("Assuming a wave moving at a fixed speed, the wavelength is inversely proportional to frequency of the wave.");
 		igSeparator();
-		igCheckbox("Show About", &show_about);
+		if (igCheckbox("Show About", &show_about))
+			LOCAL_STORAGE_SET(show_about, show_about);
 		igSameLine(0.f, 10.f);
-		igCheckbox("Show Arrows", &show_arrows);
+		if (igCheckbox("Show Arrows", &show_arrows))
+			LOCAL_STORAGE_SET(show_arrows, show_arrows);
 		igSameLine(0.f, 10.f);
-		igCheckbox("Freeze Wave", &freeze);
+		if (igCheckbox("Freeze Wave", &freeze))
+			LOCAL_STORAGE_SET(freeze, freeze);
 	}
 	igEnd();
 
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
-
-	static float speed = 200.f;
-	static float amplitude = 200.f;
-	static float frequency = 0.6f;
 
 	float wavelength = speed / frequency;
 
@@ -109,10 +128,12 @@ static void frame(void)
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
-		igSliderFloat("Amplitude (A)", &amplitude, 10.f, 1000.f, "%g m", ImGuiSliderFlags_AlwaysClamp);
-		igSliderFloat("Frequency (f)", &frequency, 0.05f, 2.f, "%g Hz", ImGuiSliderFlags_AlwaysClamp);
-		igSliderFloat("Wave Velocity (v)", &speed, 100.f, 1000.f, "%g m/s", ImGuiSliderFlags_AlwaysClamp);
-		// ImDrawList_AddText_Vec2(__dl, m_offset(ap1, 20.f, -20.f), IM_COL32_WHITE, buf, NULL);
+		if (igSliderFloat("Amplitude (A)", &amplitude, 10.f, 1000.f, "%g m", ImGuiSliderFlags_AlwaysClamp))
+			LOCAL_STORAGE_SET(amplitude, amplitude);
+		if (igSliderFloat("Frequency (f)", &frequency, 0.05f, 2.f, "%g Hz", ImGuiSliderFlags_AlwaysClamp))
+			LOCAL_STORAGE_SET(frequency, frequency);
+		if (igSliderFloat("Wave Velocity (v)", &speed, 100.f, 1000.f, "%g m/s", ImGuiSliderFlags_AlwaysClamp))
+			LOCAL_STORAGE_SET(speed, speed);
 	}
 	igSeparator();
 	{

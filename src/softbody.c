@@ -26,8 +26,6 @@
 #include "demos.h"
 #include <assert.h>
 
-static bool show_about = true;
-
 #define VERT_COUNT_MAX 18
 
 typedef struct Vertex Vertex;
@@ -278,12 +276,6 @@ static void integrate_softbody(float dt, float nrt, float *out_internal_pressure
 	}
 }
 
-static void init2(void)
-{
-	softbody.position.y = 150.f;
-	make_real_softbody(15.f, 1000.f, 15.f);
-}
-
 // 90fps phys update, yeah I know.
 // I can easily get away with 60fps, 50fps is where the simulation breaks down.
 // 50fps is possible with verlet integration, but then makes the code unergonomic and annoying to use.
@@ -296,6 +288,32 @@ static void show_arrow(ImVec2 wc, ImVec2 pos, ImVec2 force, float p, ImU32 col)
 	force.y *= p;
 
 	arrow(m_rct(wc, pos), m_rct(wc, m_vadd(pos, force)), col, 2.f, 10.f);
+}
+
+static float n;
+const float r = 8.31446261815324;
+static float t;
+
+static bool show_about;
+static bool show_total_force_lines;
+static bool show_sp_force_lines;
+
+LOCAL_STORAGE_INIT(float, n, 2000.0);
+LOCAL_STORAGE_INIT(float, t, 293.15);
+LOCAL_STORAGE_INIT(bool, show_about, true);
+LOCAL_STORAGE_INIT(bool, show_total_force_lines, false);
+LOCAL_STORAGE_INIT(bool, show_sp_force_lines, true);
+
+static void init2(void)
+{
+	softbody.position.y = 150.f;
+	make_real_softbody(15.f, 1000.f, 15.f);
+
+	n = LOCAL_STORAGE_GET(n);
+	t = LOCAL_STORAGE_GET(t);
+	show_about = LOCAL_STORAGE_GET(show_about);
+	show_total_force_lines = LOCAL_STORAGE_GET(show_total_force_lines);
+	show_sp_force_lines = LOCAL_STORAGE_GET(show_sp_force_lines);
 }
 
 static void frame(void)
@@ -316,16 +334,13 @@ static void frame(void)
 		igSeparator();
 		igTextWrapped("You can click and drag the points to move them around, observing how the softbody deforms and reacts to your actions. Have fun!");
 		igSeparator();
-		igCheckbox("Show About", &show_about);
+		if (igCheckbox("Show About", &show_about))
+			LOCAL_STORAGE_SET(show_about, show_about);
 	}
 	igEnd();
 
 	static float pressure_plot_points[128] = {0};
 	static int pressure_plot_cycle = 0;
-
-	static float n = 2000.0f;
-	const float r = 8.31446261815324;
-	static float t = 293.15;
 
 	ImVec2 wc = HANDLE_PAN();
 	RENDER_GRID(wc);
@@ -388,8 +403,6 @@ static void frame(void)
 	pressure_plot_points[pressure_plot_cycle] = internal_pressure;
 	pressure_plot_cycle = (pressure_plot_cycle + 1) % IM_ARRAYSIZE(pressure_plot_points);
 
-	static bool show_total_force_lines = false;
-	static bool show_sp_force_lines = true;
 	static char buf[32];
 
 	ImVec2 avail;
@@ -401,8 +414,11 @@ static void frame(void)
 	igSetNextWindowCollapsed(is_inside_iframe(), ImGuiCond_Once);
 	igBegin("Control Window", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	{
-		igSliderFloat("Moles (n)", &n, 100.f, 10000.f, "%g mol", 0);
-		igSliderFloat("Temperature (T)", &t, 100.f, 700.f, "%g K", 0);
+		if (igSliderFloat("Moles (n)", &n, 100.f, 10000.f, "%g mol", 0))
+			LOCAL_STORAGE_SET(n, n);
+		if (igSliderFloat("Temperature (T)", &t, 100.f, 700.f, "%g K", 0))
+			LOCAL_STORAGE_SET(t, t);
+
 		igSeparator();
 		{
 			nice_box(FORMAT(buf, "n: %6.5g", n), IM_COL32(0, 0, 255, 255));
@@ -438,8 +454,10 @@ static void frame(void)
 	}
 	igSeparator();
 	{
-		igCheckbox("Show Total Force Lines", &show_total_force_lines);
-		igCheckbox("Show Spring And Pressure Force Lines", &show_sp_force_lines);
+		if (igCheckbox("Show Total Force Lines", &show_total_force_lines))
+			LOCAL_STORAGE_SET(show_total_force_lines, show_total_force_lines);
+		if (igCheckbox("Show Spring And Pressure Force Lines", &show_sp_force_lines))
+			LOCAL_STORAGE_SET(show_sp_force_lines, show_sp_force_lines);
 	}
 	igEnd();
 
@@ -480,7 +498,6 @@ static void frame(void)
 			arrow(m_rct(wc, vertex->pos), m_rct(wc, m_vadd(vertex->pos, nvec)), IM_COL32(255, 255, 255, 80), 2.f, 10.f);
 		} */
 
-
 		if (!vertex->is_fixed)
 		{
 			if (show_sp_force_lines)
@@ -491,7 +508,7 @@ static void frame(void)
 			if (show_total_force_lines)
 			{
 				ImVec2 total = m_vadd(m_vadd(vertex->gravity_force, vertex->spring_force), vertex->pressure_force);
-				show_arrow(wc, vertex->pos, total, 0.01f, IM_COL32(152,138,189, 255));
+				show_arrow(wc, vertex->pos, total, 0.01f, IM_COL32(152, 138, 189, 255));
 			}
 		}
 
