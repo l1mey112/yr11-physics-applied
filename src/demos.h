@@ -370,14 +370,14 @@ static void RENDER_GRID(ImVec2 world_center)
 static ImVec2 __delta_scroll = {0.f, 0.f};
 
 EM_JS(float, touch_get_x, (), {
-	let dx = __t_cx - __t_px;
-	__t_px = __t_cx;
+	let dx = window.__t_cx - window.__t_px;
+	window.__t_px = window.__t_cx;
 	return dx;
 });
 
 EM_JS(float, touch_get_y, (), {
-	let dy = __t_cy - __t_py;
-	__t_py = __t_cy;
+	let dy = window.__t_cy - window.__t_py;
+	window.__t_py = window.__t_cy;
 	return dy;
 });
 
@@ -463,12 +463,12 @@ void nice_box(const char *label, ImU32 col)
 #define LOCAL_STORAGE_INIT(type, name, _default)                      \
     LOCAL_STORAGE_INIT0(type, local_storage_##name, (), {             \
         let v;                                                        \
-        if (v = sessionStorage.getItem(__FILE__ + "_" + #name))       \
+        if (v = window.sessionStorage.getItem(__FILE__ + "_" + #name))       \
             return v;                                                 \
         return _default;                                              \
     });                                                               \
     LOCAL_STORAGE_INIT0(void, local_storage_set_##name, (type val), { \
-        sessionStorage.setItem(__FILE__ + "_" + #name, val)           \
+        window.sessionStorage.setItem(__FILE__ + "_" + #name, val)           \
     })
 
 // TODO: impl later
