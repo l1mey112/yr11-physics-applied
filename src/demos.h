@@ -366,7 +366,20 @@ static void RENDER_GRID(ImVec2 world_center)
 			ImDrawList_AddLine(__dl, (ImVec2){canvas_p0.x, canvas_p0.y + y}, (ImVec2){canvas_p1.x, canvas_p0.y + y}, IM_COL32(200, 200, 200, 40), 1.0f);
 	}
 }
+
 static ImVec2 __delta_scroll = {0.f, 0.f};
+
+EM_JS(float, touch_get_x, (), {
+	let dx = __t_cx - __t_px;
+	__t_px = __t_cx;
+	return dx;
+});
+
+EM_JS(float, touch_get_y, (), {
+	let dy = __t_cy - __t_py;
+	__t_py = __t_cy;
+	return dy;
+});
 
 static ImVec2 HANDLE_PAN()
 {
@@ -380,6 +393,9 @@ static ImVec2 HANDLE_PAN()
 #ifndef HANDLE_PAN_NO_Y
 		__delta_scroll.y += __io->MouseDelta.y;
 #endif
+	} else {
+		__delta_scroll.x += touch_get_x(); // handle mobile
+		__delta_scroll.y += touch_get_y(); // handle mobile
 	}
 	ImVec2 world_center = {__delta_scroll.x + canvas_sz.x / 2.0f, __delta_scroll.y + canvas_sz.y / 2.0f};
 

@@ -31,7 +31,7 @@ build/:
 public/:
 	mkdir public
 
-public/%.html: src/%.c build/libsokol.a build/libcimgui.a src/demos.h src/world.h
+public/%.html: src/%.c build/libsokol.a build/libcimgui.a src/demos.h src/world.h sokol/shell.html
 	emcc -o $@ $< $(CFLAGS) $(FCFLAGS) \
 		--shell-file sokol/shell.html \
 		-sNO_FILESYSTEM=1 \
